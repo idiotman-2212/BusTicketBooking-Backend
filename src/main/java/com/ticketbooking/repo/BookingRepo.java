@@ -19,7 +19,7 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     List<Booking> getAllBookingFromTripAndDate(@Param("tripId") Long tripId);
 
     @Query(value = """
-            select * from booking b where b.phone=:phone and b.username is null
+            select * from booking b where b.phone=:phone /*and b.username is null*/
             """, nativeQuery = true)
     List<Booking> findAllByPhone(@Param("phone") String phone);
 
