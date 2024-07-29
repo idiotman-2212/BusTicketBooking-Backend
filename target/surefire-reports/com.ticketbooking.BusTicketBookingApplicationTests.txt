@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.ticketbooking.BusTicketBookingApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 39.105 s - in com.ticketbooking.BusTicketBookingApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.454 s - in com.ticketbooking.BusTicketBookingApplicationTests
