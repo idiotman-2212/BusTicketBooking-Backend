@@ -36,6 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.tokenRepo = tokenRepo;
     }
 
+    // Xử lý JWT
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,

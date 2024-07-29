@@ -46,6 +46,7 @@ public class SecurityConfig {
     @Bean
     WebMvcConfigurer webMvcConfigurer() {
         return new WebMvcConfigurer() {
+            //Cấu hình CORS (Cross-Origin Resource Sharing) cho các endpoint
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/v1/**").allowedHeaders("*").allowedOrigins("*").allowedMethods("*");
@@ -72,7 +73,7 @@ public class SecurityConfig {
                         .authenticated()
                 )
                 .sessionManagement(ssm -> ssm
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)//không sử dụng session
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -81,7 +82,7 @@ public class SecurityConfig {
                         .permitAll()
                         .addLogoutHandler(logoutHandler)
                         .logoutSuccessHandler((request, response, authentication) -> {
-                            SecurityContextHolder.clearContext();
+                            SecurityContextHolder.clearContext();//xoá context
 
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setHeader("Access-Control-Allow-Origin", "*");

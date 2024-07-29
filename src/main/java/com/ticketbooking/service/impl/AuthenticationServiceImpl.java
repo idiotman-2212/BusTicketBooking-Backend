@@ -53,10 +53,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     @Transactional
     public AuthenticationResponse login(AuthenticationRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate(//xác thực người dùng bằng authentication manager
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
         );
-
+        //nếu xác thực thành công thì tạo token mới và xoá token cũ
         if (authentication.isAuthenticated()) {
             User user = userService.findByUsername(authRequest.getUsername());
             String jwtToken = jwtService.generateToken(user);
