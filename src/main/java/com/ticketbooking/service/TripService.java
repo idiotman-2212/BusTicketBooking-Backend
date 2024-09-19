@@ -4,6 +4,7 @@ import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Trip;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TripService {
@@ -21,4 +22,5 @@ public interface TripService {
     String delete(Long id);
 
     List<Trip> findAllBySourceAndDest(Long sourceId, Long destId, String chosenFromDate, String chosenToDate);
+    List<Trip> findRecentTripsByDriverId(Long driverId, String fromDateTime, String toDateTime);
 }

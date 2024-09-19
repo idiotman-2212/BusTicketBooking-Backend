@@ -3,6 +3,7 @@ package com.ticketbooking.controller;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Driver;
 import com.ticketbooking.service.DriverService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/drivers")
+@Tag(name = "Driver Controller")
 public class DriverController {
 
     private final DriverService driverService;

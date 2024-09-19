@@ -24,4 +24,5 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     List<Booking> findAllByPhone(@Param("phone") String phone);
 
     List<Booking> findAllByUser(User user);
+    List<Booking> findByPhone(String phone);
 }

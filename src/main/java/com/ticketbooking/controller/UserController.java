@@ -5,6 +5,7 @@ import com.ticketbooking.dto.PermissionDto;
 import com.ticketbooking.dto.ScreenPermissionDto;
 import com.ticketbooking.model.User;
 import com.ticketbooking.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/users")
+@Tag(name = "User Controller")
 public class UserController {
 
     private final UserService userService;

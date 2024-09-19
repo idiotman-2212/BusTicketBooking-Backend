@@ -3,15 +3,20 @@ package com.ticketbooking.controller;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Trip;
 import com.ticketbooking.service.TripService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/trips")
+@Tag(name = "Trip Controller")
 public class TripController {
 
     private final TripService tripService;
@@ -64,4 +69,14 @@ public class TripController {
                 .body(tripService.delete(tripId));
     }
 
+    @GetMapping("/driver/{driverId}/recent")
+    public List<Trip> getRecentTripsByDriver(
+            @PathVariable Long driverId,
+            @RequestParam String departureDateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime departureDateTimeParsed = LocalDateTime.parse(departureDateTime, formatter);
+        return tripService.findRecentTripsByDriverId(driverId,
+                departureDateTimeParsed.minusDays(2).format(formatter),
+                departureDateTimeParsed.format(formatter));
+    }
 }

@@ -4,6 +4,7 @@ import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Discount;
 import com.ticketbooking.model.Discount;
 import com.ticketbooking.service.DiscountService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/discounts")
+@Tag(name = "Discount Controller")
 public class DiscountController {
 
     private final DiscountService discountService;

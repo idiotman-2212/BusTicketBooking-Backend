@@ -26,4 +26,5 @@ public interface BookingService {
     String delete(Long id);
 
     List<Booking> getAllBookingFromTripAndDate(Long tripId);
+    List<Booking> findBookingsByPhone(String phone);
 }

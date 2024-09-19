@@ -2,6 +2,7 @@ package com.ticketbooking.controller;
 
 import com.ticketbooking.dto.*;
 import com.ticketbooking.service.AuthenticationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/auth")
+@Tag(name = "Authentication Controller")
 public class AuthenticationController {
 
     private final AuthenticationService authService;

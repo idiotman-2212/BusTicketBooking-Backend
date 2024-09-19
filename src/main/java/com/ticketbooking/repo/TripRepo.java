@@ -51,4 +51,11 @@ public interface TripRepo extends JpaRepository<Trip, Long> {
             @Param("sourceId") Long sourceId,
             @Param("destinationId") Long destinationId,
             @Param("departureDateTime") LocalDateTime departureDateTime);
+
+    @Query("SELECT t FROM Trip t WHERE t.driver.id = :driverId " +
+            "AND t.departureDateTime BETWEEN :fromDateTime AND :toDateTime")
+    List<Trip> findRecentTripsByDriverId(
+            @Param("driverId") Long driverId,
+            @Param("fromDateTime") LocalDateTime fromDateTime,
+            @Param("toDateTime") LocalDateTime toDateTime);
 }

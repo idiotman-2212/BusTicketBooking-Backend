@@ -4,6 +4,7 @@ import com.ticketbooking.dto.BookingRequest;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Booking;
 import com.ticketbooking.service.BookingService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/bookings")
+@Tag(name = "Booking Controller")
 public class BookingController {
 
     private final BookingService bookingService;
@@ -70,5 +72,10 @@ public class BookingController {
         return ResponseEntity
                 .status(200)
                 .body(bookingService.delete(bookingId));
+    }
+    @GetMapping("/search")
+    public ResponseEntity<List<Booking>> searchBookingsByPhone(@RequestParam String phone) {
+        List<Booking> bookings = bookingService.findBookingsByPhone(phone);
+        return ResponseEntity.ok(bookings);
     }
 }

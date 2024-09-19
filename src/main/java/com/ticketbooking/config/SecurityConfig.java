@@ -21,8 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -46,18 +51,33 @@ public class SecurityConfig {
     @Bean
     WebMvcConfigurer webMvcConfigurer() {
         return new WebMvcConfigurer() {
-            //Cấu hình CORS (Cross-Origin Resource Sharing) cho các endpoint
+            // CORS configuration
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/v1/**").allowedHeaders("*").allowedOrigins("*").allowedMethods("*");
+                registry.addMapping("/api/v1/**")
+                        .allowedHeaders("*")
+                        .allowedOrigins("http://14.225.253.62:3000", "http://14.225.253.62:3001",
+                                "http://14.225.253.62:8080", "http://localhost:8080",
+                                "http://localhost:3000", "http://localhost:3001",
+                                "http://chauhuydien.id.vn/admin", "http://chauhuydien.id.vn")
+                        .allowedMethods("*");
+            }
+
+            // Register LocaleChangeInterceptor
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                LocaleChangeInterceptor localeChangeInterceptor = new LocaleChangeInterceptor();
+                localeChangeInterceptor.setParamName("lang");  // Parameter để chọn ngôn ngữ
+                localeChangeInterceptor.setIgnoreInvalidLocale(true);
+                registry.addInterceptor(localeChangeInterceptor);
             }
         };
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.disable())
+                .cors(cors ->cors.disable())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
@@ -66,8 +86,14 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/v1/provinces/**",
                                 "/api/v1/bookings/**",
-                                "/api/v1/trips/**"
+                                "/api/v1/trips/**",
+                                "/api/v1/language/**"
                         )
+                        .permitAll()
+                        .requestMatchers("/swagger-ui/**",      // Swagger UI resources
+                                "/swagger-ui.html",
+                                "/swagger-ui/index.html#",
+                                "/v3/api-docs/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated()
@@ -90,6 +116,7 @@ public class SecurityConfig {
                 );
         return http.build();
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

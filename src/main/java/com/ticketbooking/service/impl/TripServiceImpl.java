@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -55,6 +56,10 @@ public class TripServiceImpl implements TripService {
     @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
     public Trip save(Trip trip) {
 
+        // Log thông tin để kiểm tra
+        System.out.println("Checking trips for driver: " + trip.getDriver().getId());
+        System.out.println("New trip departure datetime: " + trip.getDepartureDateTime());
+
         // check if source == destination
         if (trip.getSource().getId() == trip.getDestination().getId()) {
             throw new InvalidInputException("Start location <%s> and End location <%s> cannot be the same"
@@ -63,6 +68,22 @@ public class TripServiceImpl implements TripService {
                             trip.getDestination().getName()
                     )
             );
+        }
+
+        // Check if the driver has any trip within the last 2 days
+        LocalDateTime twoDaysAgo = trip.getDepartureDateTime().minusDays(2);
+        System.out.println("Two days ago: " + twoDaysAgo);
+
+        List<Trip> recentTrips = tripRepo.findRecentTripsByDriverId(
+                trip.getDriver().getId(),
+                twoDaysAgo,
+                trip.getDepartureDateTime()
+        );
+
+        if (!recentTrips.isEmpty()) {
+            System.out.println("Found recent trips: " + recentTrips.size());
+            throw new InvalidInputException("Driver <%s> has another trip within 2 days of the new trip."
+                    .formatted(trip.getDriver().getFullName()));
         }
 
         // check duplicate Trip
@@ -89,6 +110,7 @@ public class TripServiceImpl implements TripService {
         return tripRepo.save(trip);
     }
 
+
     @Override
     @Transactional
     @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
@@ -102,6 +124,18 @@ public class TripServiceImpl implements TripService {
                             trip.getDestination().getName()
                     )
             );
+        }
+        // Check if the driver has any trip within the last 2 days
+        LocalDateTime twoDaysAgo = trip.getDepartureDateTime().minusDays(2);
+        List<Trip> recentTrips = tripRepo.findRecentTripsByDriverId(
+                trip.getDriver().getId(),
+                twoDaysAgo,
+                trip.getDepartureDateTime()
+        );
+
+        if (!recentTrips.isEmpty()) {
+            throw new InvalidInputException("Driver <%s> has another trip within 2 days of the new trip."
+                    .formatted(trip.getDriver().getFullName()));
         }
 
         // check other duplicate Trip
@@ -150,4 +184,13 @@ public class TripServiceImpl implements TripService {
         LocalDate toDate = LocalDate.parse(chosenToDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         return tripRepo.findAllBySourceIdAndDestinationId(sourceId, destId, fromDate, toDate);
     }
+
+    @Override
+    public List<Trip> findRecentTripsByDriverId(Long driverId, String fromDateTime, String toDateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        LocalDateTime fromDateTimeParsed = LocalDateTime.parse(fromDateTime, formatter);
+        LocalDateTime toDateTimeParsed = LocalDateTime.parse(toDateTime, formatter);
+        return tripRepo.findRecentTripsByDriverId(driverId, fromDateTimeParsed, toDateTimeParsed);
+    }
+
 }

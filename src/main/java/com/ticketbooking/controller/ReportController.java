@@ -2,12 +2,14 @@ package com.ticketbooking.controller;
 
 import com.ticketbooking.dto.ReportResponse;
 import com.ticketbooking.service.ReportService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/reports")
+@Tag(name = "Report Controller")
 public class ReportController {
 
     private final ReportService reportService;

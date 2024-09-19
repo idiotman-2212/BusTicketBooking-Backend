@@ -172,4 +172,9 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> getAllBookingFromTripAndDate(Long tripId) {
         return bookingRepo.getAllBookingFromTripAndDate(tripId);
     }
+
+    @Override
+    public List<Booking> findBookingsByPhone(String phone) {
+        return bookingRepo.findByPhone(phone);
+    }
 }
