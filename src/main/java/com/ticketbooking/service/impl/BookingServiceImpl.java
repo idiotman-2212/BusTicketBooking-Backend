@@ -12,6 +12,7 @@ import com.ticketbooking.repo.PaymentHistoryRepo;
 import com.ticketbooking.repo.UserRepo;
 import com.ticketbooking.service.BookingService;
 import com.ticketbooking.service.PaymentHistoryService;
+import com.ticketbooking.service.SmsService;
 import com.ticketbooking.validator.ObjectValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +23,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -40,6 +43,8 @@ public class BookingServiceImpl implements BookingService {
     private final ObjectValidator<Booking> objectValidator;
 
     private final UserRepo userRepo;
+
+    private final SmsService smsService;
 
     @Override
     @Cacheable(cacheNames = {"bookings"}, key = "#phone")
@@ -110,6 +115,7 @@ public class BookingServiceImpl implements BookingService {
 
         List<PaymentHistory> paymentHistories = new ArrayList<>();
 
+
         for (Booking savedBooking : savedBookings) {
             paymentHistories.add(PaymentHistory
                     .builder()
@@ -121,6 +127,34 @@ public class BookingServiceImpl implements BookingService {
         }
 
         paymentHistoryRepo.saveAll(paymentHistories);
+
+        // Gửi SMS xác nhận vé đặt thành công
+        String source = bookingRequest.getTrip().getSource().getName();// Ví dụ thông tin chuyến đi
+        String destination = bookingRequest.getTrip().getDestination().getName();
+
+        String busInfo = bookingRequest.getTrip().getCoach().getName(); // Ví dụ thông tin xe
+        String departureTime = bookingRequest.getTrip().getDepartureDateTime().toString().formatted("yyyy-MM-dd HH:mm"); // Ngày giờ đi
+        String seatNumbers = String.join(", ", bookingRequest.getSeatNumber());  // Danh sách ghế
+        BigDecimal totalPayment = bookingRequest.getTotalPayment();  // Tổng giá vé
+
+        // Gửi SMS xác nhận vé đặt thành công
+        String message = String.format(
+                "THÔNG TIN VÉ ĐẶT\n" +
+                        "Tuyến: " + source + " => " + destination + "\n" +
+                        "Xe: " + busInfo + "\n" +
+                        "Ngày đi: " + departureTime + "\n" +
+                        "Ghế: " + seatNumbers + "\n" +
+                        "Giá vé: " + NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(totalPayment)
+        );
+
+        // Chuyển đổi số điện thoại
+        String phoneNumber = bookingRequest.getPhone();
+        if (phoneNumber != null && phoneNumber.startsWith("0")) {
+            phoneNumber = "+84" + phoneNumber.substring(1);
+        }
+
+        // Gửi SMS tới số điện thoại khách hàng
+        smsService.sendSms(phoneNumber, message);
 
         return savedBookings;
     }
@@ -145,7 +179,36 @@ public class BookingServiceImpl implements BookingService {
                 .booking(booking)
                 .build());
 
-        return bookingRepo.save(booking);
+        // Cập nhật booking
+        Booking updatedBooking = bookingRepo.save(booking);
+
+        // Gửi SMS xác nhận cập nhật
+        String source = updatedBooking.getTrip().getSource().getName();
+        String destination = updatedBooking.getTrip().getDestination().getName();
+        String busInfo = updatedBooking.getTrip().getCoach().getName();
+        String departureTime = updatedBooking.getTrip().getDepartureDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        String seatNumbers = updatedBooking.getSeatNumber();
+        BigDecimal totalPayment = updatedBooking.getTotalPayment();
+
+        String message = String.format(
+                "THÔNG TIN VÉ ĐẶT\n" +
+                        "Tuyến: " + source + " => " + destination + "\n" +
+                        "Xe: " + busInfo + "\n" +
+                        "Ngày đi: " + departureTime + "\n" +
+                        "Ghế: " + seatNumbers + "\n" +
+                        "Giá vé: " + NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(totalPayment)
+        );
+
+        // Chuyển đổi số điện thoại
+        String phoneNumber = updatedBooking.getPhone();
+        if (phoneNumber != null && phoneNumber.startsWith("0")) {
+            phoneNumber = "+84" + phoneNumber.substring(1);
+        }
+
+        // Gửi SMS tới số điện thoại khách hàng
+        smsService.sendSms(phoneNumber, message);
+
+        return updatedBooking;
     }
 
     @Override

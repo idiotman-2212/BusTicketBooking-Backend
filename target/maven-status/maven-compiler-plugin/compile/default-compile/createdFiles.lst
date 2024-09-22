@@ -35,11 +35,13 @@ com\ticketbooking\repo\ProvinceRepo.class
 com\ticketbooking\dto\ScreenPermissionDto$ScreenPermissionDtoBuilder.class
 com\ticketbooking\service\RoleService.class
 com\ticketbooking\service\impl\DiscountServiceImpl.class
+com\ticketbooking\service\SmsService.class
 com\ticketbooking\repo\TokenRepo.class
 com\ticketbooking\controller\TripController.class
 com\ticketbooking\service\DiscountService.class
 com\ticketbooking\dto\EmailMessage$EmailMessageBuilder.class
 com\ticketbooking\controller\ProvinceController.class
+com\ticketbooking\config\swagger\OpenApiConfig.class
 com\ticketbooking\repo\ReportRepo.class
 com\ticketbooking\model\Driver.class
 com\ticketbooking\model\Trip$TripBuilder.class
