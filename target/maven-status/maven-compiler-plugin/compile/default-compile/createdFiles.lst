@@ -16,6 +16,7 @@ com\ticketbooking\model\Token$TokenBuilder.class
 com\ticketbooking\service\ReportService.class
 com\ticketbooking\dto\PermissionDto.class
 com\ticketbooking\exception\ResourceNotFoundException.class
+com\ticketbooking\model\enumType\MessageType.class
 com\ticketbooking\model\User.class
 com\ticketbooking\model\User$UserBuilder.class
 com\ticketbooking\model\enumType\PaymentStatus.class
@@ -24,10 +25,12 @@ com\ticketbooking\service\UserPermissionService.class
 com\ticketbooking\service\CoachService.class
 com\ticketbooking\dto\RegisterRequest$RegisterRequestBuilder.class
 com\ticketbooking\exception\GlobalExceptionHandler.class
+com\ticketbooking\service\ChatMessageService.class
 com\ticketbooking\model\Trip.class
 com\ticketbooking\service\impl\UserPermissionServiceImpl.class
 com\ticketbooking\controller\DiscountController.class
 com\ticketbooking\exception\ExistingResourceException.class
+com\ticketbooking\model\ChatMessage$ChatMessageBuilder.class
 com\ticketbooking\exception\InvalidInputException.class
 com\ticketbooking\model\enumType\BookingType.class
 com\ticketbooking\model\enumType\RoleCode.class
@@ -35,6 +38,8 @@ com\ticketbooking\repo\ProvinceRepo.class
 com\ticketbooking\dto\ScreenPermissionDto$ScreenPermissionDtoBuilder.class
 com\ticketbooking\service\RoleService.class
 com\ticketbooking\service\impl\DiscountServiceImpl.class
+com\ticketbooking\controller\ChatController.class
+com\ticketbooking\config\WebSocketConfig.class
 com\ticketbooking\service\SmsService.class
 com\ticketbooking\repo\TokenRepo.class
 com\ticketbooking\controller\TripController.class
@@ -69,6 +74,7 @@ com\ticketbooking\repo\RoleRepo.class
 com\ticketbooking\model\Province.class
 com\ticketbooking\jwt\JwtService.class
 com\ticketbooking\service\impl\BookingServiceImpl.class
+com\ticketbooking\repo\ChatMessageRepository.class
 com\ticketbooking\repo\UserPermissionRepo.class
 com\ticketbooking\dto\CoachUsageDto.class
 com\ticketbooking\repo\CoachRepo.class
@@ -95,9 +101,11 @@ com\ticketbooking\dto\YearRevenueDto.class
 com\ticketbooking\dto\ForgotRequest$ForgotRequestBuilder.class
 com\ticketbooking\dto\AuthenticationRequest$AuthenticationRequestBuilder.class
 com\ticketbooking\model\Coach.class
+com\ticketbooking\service\impl\ChatMessageServiceImpl.class
 com\ticketbooking\dto\AuthenticationResponse.class
 com\ticketbooking\service\LogoutService.class
 com\ticketbooking\controller\AuthenticationController.class
+com\ticketbooking\model\ChatMessage.class
 com\ticketbooking\dto\BookingRequest.class
 com\ticketbooking\validator\ObjectValidator.class
 com\ticketbooking\controller\BookingController.class

@@ -7,10 +7,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,46 +23,56 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class User implements UserDetails {
     @Id
-    private String username;
+     String username;
 
     @NotEmpty(message = "Password should not be empty")
-    private String password;
+     String password;
 
     @NotEmpty(message = "First name should not be empty")
-    private String firstName;
+     String firstName;
 
     @NotEmpty(message = "Last name should not be empty")
-    private String lastName;
+     String lastName;
 
     @Column(unique = true)
     @Email(regexp = AppConstants.EMAIL_REGEX_PATTERN, message = "Invalid email")
-    private String email;
+     String email;
 
     @Column(unique = true)
     @Pattern(regexp = AppConstants.PHONE_REGEX_PATTERN, message = "Invalid phone")
-    private String phone;
+     String phone;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate dob;
+     LocalDate dob;
 
-    private Boolean gender;
+     Boolean gender;
 
-    private String address;
+     String address;
 
-    private Boolean active;
+     Boolean active;
+
+    @OneToMany(mappedBy = "customer")
+    @JsonIgnore
+     List<Conversation> customers; // Cuộc hội thoại mà user là khách hàng
+
+    @OneToMany(mappedBy = "staff")
+    @JsonIgnore
+     List<Conversation> staffs; // Cuộc hội thoại mà user là nhân viên
+
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-    private List<UserPermission> permissions;
+     List<UserPermission> permissions;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
-    private List<Booking> bookings;
+     List<Booking> bookings;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     @JsonIgnore
-    private List<Token> tokens;
+     List<Token> tokens;
 
     @Override
     @JsonIgnore
