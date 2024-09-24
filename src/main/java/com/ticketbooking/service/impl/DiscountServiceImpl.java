@@ -16,7 +16,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -130,4 +133,33 @@ public class DiscountServiceImpl implements DiscountService {
                 discountId, field, value);
         return foundDiscounts.isEmpty();
     }
+
+    @Service
+    @RequiredArgsConstructor
+    public class DiscountService {
+
+        // existing methods
+
+        public Discount createDiscountFromPoints(int points) {
+            BigDecimal discountAmount = calculateDiscountAmount(points);
+            Discount discount = Discount.builder()
+                    .code(generateRandomCode())
+                    .amount(discountAmount)
+                    .startDateTime(LocalDateTime.now())
+                    .endDateTime(LocalDateTime.now().plusDays(30))
+                    .description("Discount for redeeming %d points".formatted(points))
+                    .build();
+            return discountRepo.save(discount);
+        }
+
+        private BigDecimal calculateDiscountAmount(int points) {
+            // Assuming 10 points = 1 currency unit
+            return new BigDecimal(points / 10);
+        }
+
+        private String generateRandomCode() {
+            return UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        }
+    }
+
 }

@@ -41,4 +41,5 @@ public class Discount {
     @OneToMany(mappedBy = "discount")
     @JsonIgnore
     private List<Trip> trips;
+
 }

@@ -2,8 +2,11 @@ package com.ticketbooking.repo;
 
 import com.ticketbooking.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +24,12 @@ public interface UserRepo extends JpaRepository<User, String> {
     Optional<User> findByEmail(String email);
 
     void deleteByUsername(String username);
+
+    @Modifying
+    @Query("UPDATE User u SET u.loyaltyPoints = u.loyaltyPoints + :points WHERE u.username = :username")
+    void addLoyaltyPoints(@Param("username") String username, @Param("points") BigDecimal points);
+
+    @Modifying
+    @Query("UPDATE User u SET u.loyaltyPoints = u.loyaltyPoints - :points WHERE u.username = :username")
+    void deductLoyaltyPoints(@Param("username") String username, @Param("points") BigDecimal points);
 }

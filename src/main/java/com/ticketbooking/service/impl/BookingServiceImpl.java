@@ -11,7 +11,7 @@ import com.ticketbooking.repo.BookingRepo;
 import com.ticketbooking.repo.PaymentHistoryRepo;
 import com.ticketbooking.repo.UserRepo;
 import com.ticketbooking.service.BookingService;
-import com.ticketbooking.service.PaymentHistoryService;
+import com.ticketbooking.service.LoyaltyPointsService;
 import com.ticketbooking.service.SmsService;
 import com.ticketbooking.validator.ObjectValidator;
 import jakarta.transaction.Transactional;
@@ -30,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +44,8 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepo userRepo;
 
     private final SmsService smsService;
+
+    private final LoyaltyPointsService loyaltyPointsService;
 
     @Override
     @Cacheable(cacheNames = {"bookings"}, key = "#phone")
@@ -89,6 +90,35 @@ public class BookingServiceImpl implements BookingService {
 
         String[] selectSeats = bookingRequest.getSeatNumber();
 
+        User user = bookingRequest.getUser();
+        BigDecimal totalPayment = bookingRequest.getTotalPayment();
+        BigDecimal pointsUsed = bookingRequest.getPointsUsed();
+        BigDecimal discountAmount = bookingRequest.getDiscountAmount();
+
+        // Kiểm tra và áp dụng xu
+        if (pointsUsed != null && pointsUsed.compareTo(BigDecimal.ZERO) > 0) {
+            if (pointsUsed.compareTo(user.getLoyaltyPoints()) > 0) {
+                throw new IllegalArgumentException("Không đủ xu để sử dụng");
+            }
+
+            // Tính toán số tiền giảm giá (giả sử 1 xu = 1000 VND)
+            discountAmount = pointsUsed.multiply(new BigDecimal("1000"));
+
+            // Đảm bảo số tiền giảm giá không vượt quá tổng số tiền thanh toán
+            if (discountAmount.compareTo(totalPayment) > 0) {
+                discountAmount = totalPayment;
+                pointsUsed = totalPayment.divide(new BigDecimal("1000"), 0, BigDecimal.ROUND_DOWN);
+            }
+
+            // Cập nhật tổng số tiền thanh toán
+            totalPayment = totalPayment.subtract(discountAmount);
+
+            // Cập nhật số xu của người dùng
+            user.setLoyaltyPoints(user.getLoyaltyPoints().subtract(pointsUsed));
+            userRepo.save(user);
+        }
+
+
         List<Booking> orderedBookings = new ArrayList<>();
         for (String seat : selectSeats) {
 
@@ -104,7 +134,8 @@ public class BookingServiceImpl implements BookingService {
                     .custLastName(bookingRequest.getLastName())
                     .phone(bookingRequest.getPhone())
                     .email(bookingRequest.getEmail())
-                    .totalPayment(BigDecimal.valueOf(bookingRequest.getTotalPayment().longValue() / selectSeats.length))
+                    //.totalPayment(BigDecimal.valueOf(bookingRequest.getTotalPayment().longValue() / selectSeats.length))
+                    .totalPayment(totalPayment)
                     .paymentDateTime(LocalDateTime.now())
                     .paymentMethod(bookingRequest.getPaymentMethod())
                     .paymentStatus(bookingRequest.getPaymentStatus())
@@ -114,8 +145,7 @@ public class BookingServiceImpl implements BookingService {
         var savedBookings = bookingRepo.saveAll(orderedBookings);
 
         List<PaymentHistory> paymentHistories = new ArrayList<>();
-
-
+        
         for (Booking savedBooking : savedBookings) {
             paymentHistories.add(PaymentHistory
                     .builder()
@@ -135,7 +165,7 @@ public class BookingServiceImpl implements BookingService {
         String busInfo = bookingRequest.getTrip().getCoach().getName(); // Ví dụ thông tin xe
         String departureTime = bookingRequest.getTrip().getDepartureDateTime().toString().formatted("yyyy-MM-dd HH:mm"); // Ngày giờ đi
         String seatNumbers = String.join(", ", bookingRequest.getSeatNumber());  // Danh sách ghế
-        BigDecimal totalPayment = bookingRequest.getTotalPayment();  // Tổng giá vé
+        //BigDecimal totalPayment = bookingRequest.getTotalPayment();  // Tổng giá vé
 
         // Gửi SMS xác nhận vé đặt thành công
         String message = String.format(
@@ -158,6 +188,8 @@ public class BookingServiceImpl implements BookingService {
 
         return savedBookings;
     }
+
+
 
     @Override
     @Transactional

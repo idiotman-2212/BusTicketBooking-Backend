@@ -2,6 +2,7 @@ package com.ticketbooking.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.ticketbooking.utils.AppConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -13,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -54,13 +56,25 @@ public class User implements UserDetails {
 
      Boolean active;
 
-    @OneToMany(mappedBy = "customer")
-    @JsonIgnore
-     List<Conversation> customers; // Cuộc hội thoại mà user là khách hàng
+     //Tích xu
+    @Column(name = "loyalty_points", nullable = false, columnDefinition = "decimal(38,2) default 0")
+     BigDecimal loyaltyPoints;
 
-    @OneToMany(mappedBy = "staff")
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     @JsonIgnore
-     List<Conversation> staffs; // Cuộc hội thoại mà user là nhân viên
+    List<LoyaltyTransaction> loyaltyTransactions;
+
+    public void addLoyaltyPoints(BigDecimal points) {
+        this.loyaltyPoints = this.loyaltyPoints.add(points);
+    }
+
+    public void deductLoyaltyPoints(BigDecimal points) {
+        if (this.loyaltyPoints.compareTo(points) < 0) {
+            throw new IllegalArgumentException("Not enough loyalty points");
+        }
+        this.loyaltyPoints = this.loyaltyPoints.subtract(points);
+    }
 
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
@@ -103,4 +117,5 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
 }

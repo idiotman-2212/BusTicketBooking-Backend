@@ -68,4 +68,26 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking")
     private List<PaymentHistory> paymentHistories;
+
+
+    @Column(name = "points_earned", nullable = false, columnDefinition = "decimal(38,2) default 0")
+    private BigDecimal pointsEarned;
+
+    @Column(name = "points_used", nullable = false, columnDefinition = "decimal(38,2) default 0")
+    private BigDecimal pointsUsed;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<LoyaltyTransaction> loyaltyTransactions;
+
+    public void applyLoyaltyPoints(BigDecimal points) {
+        if (points.compareTo(BigDecimal.ZERO) > 0) {
+            this.pointsUsed = points;
+            this.totalPayment = this.totalPayment.subtract(points);
+        }
+    }
+
+    public void calculateEarnedPoints(BigDecimal rate) {
+        this.pointsEarned = this.totalPayment.multiply(rate);
+    }
+
 }
