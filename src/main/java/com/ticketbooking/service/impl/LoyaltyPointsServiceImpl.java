@@ -1,5 +1,6 @@
 package com.ticketbooking.service.impl;
 
+import com.ticketbooking.dto.LoyaltyTransactionDTO;
 import com.ticketbooking.model.Booking;
 import com.ticketbooking.model.LoyaltyTransaction;
 import com.ticketbooking.model.User;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -39,10 +41,19 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
         User user = userRepo.findByUsername(booking.getUser().getUsername())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        // Tính toán số điểm dựa trên tổng thanh toán
         BigDecimal pointsEarned = booking.getTotalPayment().multiply(POINTS_RATE);
-        booking.setPointsEarned(pointsEarned);
-        bookingRepo.save(booking);
 
+        // Đảm bảo pointsEarned không bị null hoặc lỗi
+        if (pointsEarned == null || pointsEarned.compareTo(BigDecimal.ZERO) < 0) {
+            pointsEarned = BigDecimal.ZERO;
+        }
+
+        // Gán pointsEarned cho đối tượng booking
+        //booking.setPointsEarned(pointsEarned);
+        bookingRepo.save(booking);  // Lưu lại đối tượng Booking sau khi gán điểm thưởng
+
+        // Tạo giao dịch Loyalty
         LoyaltyTransaction transaction = new LoyaltyTransaction();
         transaction.setUser(user);
         transaction.setBooking(booking);
@@ -51,6 +62,7 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
         transaction.setTransactionType(LoyaltyTransaction.TransactionType.EARN);
         loyaltyTransactionRepo.save(transaction);
 
+        // Cộng điểm cho người dùng
         userRepo.addLoyaltyPoints(user.getUsername(), pointsEarned);
     }
 
@@ -67,7 +79,7 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
             throw new IllegalArgumentException("Not enough loyalty points");
         }
 
-        booking.setPointsUsed(pointsToUse);
+        //booking.setPointsUsed(pointsToUse);
         booking.setTotalPayment(booking.getTotalPayment().subtract(pointsToUse));
         bookingRepo.save(booking);
 
@@ -86,12 +98,26 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
     public BigDecimal getLoyaltyPoints(String username) {
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        System.out.println("Username" + user.getUsername());
+        System.out.println("Username " + user.getUsername());
         return user.getLoyaltyPoints();
     }
 
     @Override
-    public List<LoyaltyTransaction> getLoyaltyTransactions(String username) {
-        return loyaltyTransactionRepo.findByUserUsernameOrderByTransactionDateDesc(username);
+    public List<LoyaltyTransactionDTO> getLoyaltyTransactions(String username) {
+        List<LoyaltyTransaction> transactions = loyaltyTransactionRepo.findByUserUsernameOrderById(username);
+
+        return transactions.stream()
+                .map(transaction -> {
+                    LoyaltyTransactionDTO dto = new LoyaltyTransactionDTO();
+                    dto.setId(transaction.getId());
+                    dto.setBookingId(transaction.getBooking().getId());
+                    dto.setCustFirstName(transaction.getBooking().getCustFirstName());
+                    dto.setCustLastName(transaction.getBooking().getCustLastName());
+                    dto.setAmount(transaction.getAmount());
+                    dto.setTransactionDate(transaction.getTransactionDate());
+                    dto.setTransactionType(transaction.getTransactionType().name()); // Chuyển đổi enum thành String
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }

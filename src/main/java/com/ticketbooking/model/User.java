@@ -76,6 +76,9 @@ public class User implements UserDetails {
         this.loyaltyPoints = this.loyaltyPoints.subtract(points);
     }
 
+    public boolean hasEnoughPoints(BigDecimal points) {
+        return this.loyaltyPoints.compareTo(points) >= 0;
+    }
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
      List<UserPermission> permissions;

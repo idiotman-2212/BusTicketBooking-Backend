@@ -1,6 +1,7 @@
 package com.ticketbooking.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ticketbooking.model.enumType.BookingType;
 import com.ticketbooking.model.enumType.PaymentMethod;
 import com.ticketbooking.model.enumType.PaymentStatus;
@@ -79,15 +80,18 @@ public class Booking {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<LoyaltyTransaction> loyaltyTransactions;
 
+    // Phương thức áp dụng xu giảm giá
     public void applyLoyaltyPoints(BigDecimal points) {
         if (points.compareTo(BigDecimal.ZERO) > 0) {
             this.pointsUsed = points;
             this.totalPayment = this.totalPayment.subtract(points);
         }
     }
-
-    public void calculateEarnedPoints(BigDecimal rate) {
-        this.pointsEarned = this.totalPayment.multiply(rate);
-    }
+    // Phương thức tính toán số xu tích lũy
+     public void calculateEarnedPoints(BigDecimal rate) {
+          this.pointsEarned = (this.totalPayment != null && rate != null)
+            ? this.totalPayment.multiply(rate)
+            : BigDecimal.ZERO;
+      }
 
 }

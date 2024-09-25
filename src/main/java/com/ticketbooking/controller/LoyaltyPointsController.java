@@ -1,5 +1,6 @@
 package com.ticketbooking.controller;
 
+import com.ticketbooking.dto.LoyaltyTransactionDTO;
 import com.ticketbooking.model.LoyaltyTransaction;
 import com.ticketbooking.service.LoyaltyPointsService;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,9 @@ public class LoyaltyPointsController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<List<LoyaltyTransaction>> getLoyaltyTransactions(Authentication authentication) {
+    public ResponseEntity<?> getLoyaltyTransactions(Authentication authentication) {
         String username = authentication.getName();
-        List<LoyaltyTransaction> transactions = loyaltyPointsService.getLoyaltyTransactions(username);
+        List<LoyaltyTransactionDTO> transactions = loyaltyPointsService.getLoyaltyTransactions(username);
         return ResponseEntity.ok(transactions);
     }
 
