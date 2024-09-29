@@ -19,7 +19,8 @@ public interface BookingService {
 
     PageResponse<Booking> findAll(Integer page, Integer limit);
 
-    List<Booking> save(BookingRequest bookingRequest);
+    List<Booking> saveForRegisteredUser(BookingRequest bookingRequest);
+    List<Booking> saveForWalkInCustomer(BookingRequest bookingRequest);
 
     Booking update(Booking booking);
 

@@ -1,5 +1,6 @@
 package com.ticketbooking.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.ticketbooking.model.enumType.BookingType;
@@ -28,6 +29,7 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "username")
     private User user;
@@ -93,5 +95,4 @@ public class Booking {
             ? this.totalPayment.multiply(rate)
             : BigDecimal.ZERO;
       }
-
 }

@@ -58,7 +58,7 @@ public class User implements UserDetails {
 
      //Tích xu
     @Column(name = "loyalty_points", nullable = false, columnDefinition = "decimal(38,2) default 0")
-     BigDecimal loyaltyPoints;
+     BigDecimal loyaltyPoints  = BigDecimal.ZERO;
 
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
@@ -77,14 +77,18 @@ public class User implements UserDetails {
     }
 
     public boolean hasEnoughPoints(BigDecimal points) {
+        if (this.loyaltyPoints == null) {
+            return false; // Hoặc xử lý khác tùy yêu cầu của hệ thống
+        }
         return this.loyaltyPoints.compareTo(points) >= 0;
     }
+
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
      List<UserPermission> permissions;
 
-    @OneToMany(mappedBy = "user")
     @JsonIgnore
+    @OneToMany(mappedBy = "user")
      List<Booking> bookings;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)

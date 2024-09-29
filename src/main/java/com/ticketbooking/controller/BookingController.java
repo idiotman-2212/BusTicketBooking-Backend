@@ -53,12 +53,20 @@ public class BookingController {
         return bookingService.getAllBookingFromTripAndDate(tripId);
     }
 
-    @PostMapping()
-    public ResponseEntity<List<Booking>> createBookings(@RequestBody BookingRequest bookingRequest) {
+    @PostMapping("/site1")
+    public ResponseEntity<List<Booking>> createBookingsForRegisteredUser(@RequestBody BookingRequest bookingRequest) {
         return ResponseEntity
                 .status(201)
-                .body(bookingService.save(bookingRequest));
+                .body(bookingService.saveForRegisteredUser(bookingRequest));
     }
+
+    @PostMapping("/site2")
+    public ResponseEntity<List<Booking>> createBookingsForWalkInCustomer(@RequestBody BookingRequest bookingRequest) {
+        // Gọi service để xử lý
+        List<Booking> savedBookings = bookingService.saveForWalkInCustomer(bookingRequest);
+        return ResponseEntity.status(201).body(savedBookings);
+    }
+
 
     @PutMapping
     public ResponseEntity<Booking> updateTrip(@RequestBody Booking booking) {

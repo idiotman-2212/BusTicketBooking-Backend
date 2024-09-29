@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,42 +23,45 @@ import java.util.List;
                 "driver_id", "coach_id", "source_id", "dest_id", "departureDateTime"
         })
 })
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class Trip {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+     Long id;
 
     @ManyToOne
     @JoinColumn(name = "driver_id")
-    private Driver driver;
+     Driver driver;
 
     @ManyToOne
     @JoinColumn(name = "coach_id")
-    private Coach coach;
+     Coach coach;
 
     @ManyToOne
     @JoinColumn(name = "source_id")
-    private Province source;
+     Province source;
 
     @ManyToOne
     @JoinColumn(name = "dest_id")
-    private Province destination;
+     Province destination;
 
     @ManyToOne
     @JoinColumn(name = "discount_id")
-    private Discount discount;
+     Discount discount;
 
     @Min(value = 0, message = "Price should be positive")
-    private BigDecimal price;
+     BigDecimal price;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime departureDateTime;
+     LocalDateTime departureDateTime;
 
-    private Double duration;
+    Double duration;
 
     @OneToMany(mappedBy = "trip")
     @JsonIgnore
-    private List<Booking> bookings;
+     List<Booking> bookings;
+
+    Boolean completed = false;
 }
 

@@ -31,6 +31,7 @@ public class LoyaltyTransaction {
 
     @ManyToOne
     @JoinColumn(name = "booking_id")
+    @JsonIgnore
     private Booking booking;
 
     private BigDecimal amount;

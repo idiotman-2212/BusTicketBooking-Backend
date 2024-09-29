@@ -85,10 +85,21 @@ public class ReportServiceImpl implements ReportService {
         ReportResponse reportResponse = new ReportResponse();
         switch (timeOption.trim().toUpperCase()) {
             case "DAY": {
+                List<TopRouteDto> topRouteDtoList = reportRepo.getTopRoute(startLocalDate, startLocalDate);
+                Map<String, Long> topRoutes = new LinkedHashMap<>();
+                topRouteDtoList.forEach(topRouteDto ->
+                        topRoutes.put(topRouteDto.getRoute(), topRouteDto.getCount()));
+                reportResponse.setReportData(topRoutes);
                 break;
             }
             case "WEEK": {
-
+                LocalDate start = DateTimeUtils.getFirstDayOfWeek(startLocalDate);
+                LocalDate end = DateTimeUtils.getLastDayOfWeek(endLocalDate);
+                List<TopRouteDto> topRouteDtoList = reportRepo.getTopRoute(start, end);
+                Map<String, Long> topRoutes = new LinkedHashMap<>();
+                topRouteDtoList.forEach(topRouteDto ->
+                        topRoutes.put(topRouteDto.getRoute(), topRouteDto.getCount()));
+                reportResponse.setReportData(topRoutes);
                 break;
             }
             case "MONTH": {
@@ -96,10 +107,9 @@ public class ReportServiceImpl implements ReportService {
                 LocalDate end = LocalDate.of(endLocalDate.getYear(),
                         endLocalDate.getMonthValue(),
                         DateTimeUtils.getTotalDaysInMonthOfYear(endLocalDate));
-                List<TopRouteDto> topRouteDtoList = reportRepo.getMonthTopRoute(start, end);
+                List<TopRouteDto> topRouteDtoList = reportRepo.getTopRoute(start, end);
                 Map<String, Long> topRoutes = new LinkedHashMap<>();
-                for (int i = 0; i < topRouteDtoList.size(); i++) {
-                    TopRouteDto topRouteDto = topRouteDtoList.get(0);
+                for (TopRouteDto topRouteDto : topRouteDtoList) {
                     topRoutes.put(
                             topRouteDto.getRoute(),
                             topRouteDto.getCount()
@@ -110,6 +120,13 @@ public class ReportServiceImpl implements ReportService {
             }
             case "YEAR": {
 
+                LocalDate start = LocalDate.of(startLocalDate.getYear(), 1, 1);
+                LocalDate end = LocalDate.of(endLocalDate.getYear(), 12, 31);
+                List<TopRouteDto> topRouteDtoList = reportRepo.getTopRoute(start, end);
+                Map<String, Long> topRoutes = new LinkedHashMap<>();
+                topRouteDtoList.forEach(topRouteDto ->
+                        topRoutes.put(topRouteDto.getRoute(), topRouteDto.getCount()));
+                reportResponse.setReportData(topRoutes);
                 break;
             }
             default:
@@ -120,11 +137,17 @@ public class ReportServiceImpl implements ReportService {
 
     private ReportResponse createUsageReport(LocalDate startLocalDate, LocalDate endLocalDate, String timeOption) {
         ReportResponse reportResponse = new ReportResponse();
+        List<CoachUsageDto> coachUsageDtoList;
+
         switch (timeOption.trim().toUpperCase()) {
             case "DAY": {
+                coachUsageDtoList = reportRepo.getCoachUsage(startLocalDate, startLocalDate);
                 break;
             }
             case "WEEK": {
+                LocalDate start = DateTimeUtils.getFirstDayOfWeek(startLocalDate);
+                LocalDate end = DateTimeUtils.getLastDayOfWeek(endLocalDate);
+                coachUsageDtoList = reportRepo.getCoachUsage(start, end);
                 break;
             }
             case "MONTH": {
@@ -132,26 +155,27 @@ public class ReportServiceImpl implements ReportService {
                 LocalDate end = LocalDate.of(endLocalDate.getYear(),
                         endLocalDate.getMonthValue(),
                         DateTimeUtils.getTotalDaysInMonthOfYear(endLocalDate));
-                List<CoachUsageDto> coachUsageDtoList = reportRepo.getCoachUsage(start, end);
-                Map<String, Long> usages = new LinkedHashMap<>();
-                String[] coachLabels = {"", "Bed", "Limousine", "Chair"};
-                for (int i = 1; i <= 3; i++) {
-                    usages.put(
-                            coachLabels[i],
-                            countCoachUsage(coachLabels[i].toUpperCase(), coachUsageDtoList)
-                    );
-                }
-                reportResponse.setReportData(usages);
+                coachUsageDtoList = reportRepo.getCoachUsage(start, end);
                 break;
             }
             case "YEAR": {
+                LocalDate start = LocalDate.of(startLocalDate.getYear(), 1, 1);
+                LocalDate end = LocalDate.of(endLocalDate.getYear(), 12, 31);
+                coachUsageDtoList = reportRepo.getCoachUsage(start, end);
                 break;
             }
             default:
+                coachUsageDtoList = null;
                 break;
+        }
+
+        if (coachUsageDtoList != null) {
+            Map<String, Long> usages = processCoachUsage(coachUsageDtoList);
+            reportResponse.setReportData(usages);
         }
         return reportResponse;
     }
+
 
     private Long countCoachUsage(String coachLabel, List<CoachUsageDto> coachUsageDtoList) {
         return coachUsageDtoList
@@ -159,6 +183,18 @@ public class ReportServiceImpl implements ReportService {
                 .filter(coachUsage -> coachUsage.getCoachType().name().equals(coachLabel))
                 .mapToLong(CoachUsageDto::getUsage)
                 .sum();
+    }
+
+    private Map<String, Long> processCoachUsage(List<CoachUsageDto> coachUsageDtoList) {
+        Map<String, Long> usages = new LinkedHashMap<>();
+        String[] coachLabels = {"", "Bed", "Limousine", "Chair"};
+        for (int i = 1; i <= 3; i++) {
+            usages.put(
+                    coachLabels[i],
+                    countCoachUsage(coachLabels[i].toUpperCase(), coachUsageDtoList)
+            );
+        }
+        return usages;
     }
 
     private ReportResponse createRevenueReport(LocalDate startLocalDate, LocalDate endLocalDate, String timeOption) {

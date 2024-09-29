@@ -19,6 +19,9 @@ public interface TripService {
 
     Trip update(Trip trip);
 
+    List<Trip> getIncompleteTrips(); // Lấy danh sách các chuyến đi chưa hoàn thành
+    void completeTrip(Long tripId);  // Xử lý hoàn thành chuyến đi
+
     String delete(Long id);
 
     List<Trip> findAllBySourceAndDest(Long sourceId, Long destId, String chosenFromDate, String chosenToDate);

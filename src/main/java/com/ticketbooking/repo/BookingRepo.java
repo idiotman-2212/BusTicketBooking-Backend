@@ -1,14 +1,17 @@
 package com.ticketbooking.repo;
 
 import com.ticketbooking.model.Booking;
+import com.ticketbooking.model.Trip;
 import com.ticketbooking.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Repository
 public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     @Query("""
@@ -25,4 +28,6 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     List<Booking> findAllByUser(User user);
     List<Booking> findByPhone(String phone);
+
+    List<Booking> findByTrip(Trip trip);
 }

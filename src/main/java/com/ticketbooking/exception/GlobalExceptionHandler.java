@@ -51,4 +51,15 @@ public class GlobalExceptionHandler {
                 .message(exception.getErrorMessage())
                 .build();
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiErrorResponse handleUnauthorizedException(UnauthorizedException exception){
+        return ApiErrorResponse
+                .builder()
+                .statusCode(400)
+                .dateTime(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
+                .message(exception.getMessage())
+                .build();
+    }
 }

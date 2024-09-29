@@ -48,6 +48,13 @@ public class TripController {
         return tripService.findAllBySourceAndDest(sourceId, destId, chosenFromDate, chosenToDate);
     }
 
+
+    @PutMapping("/{tripId}/complete")
+    public ResponseEntity<?> completeTrip(@PathVariable Long tripId) {
+        tripService.completeTrip(tripId);
+        return ResponseEntity.ok("Trip id= " + tripId + " completed and points have been credited to users.");
+    }
+
     @PostMapping
     public ResponseEntity<Trip> createTrip(@RequestBody Trip trip) {
         return ResponseEntity

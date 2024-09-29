@@ -46,7 +46,6 @@ public class BookingRequest {
 
     private PaymentStatus paymentStatus;
 
-    private BigDecimal pointsUsed; // Số xu được sử dụng
-    private BigDecimal discountAmount; // Số tiền giảm giá từ việc sử dụng xu
+    private BigDecimal pointsToUse; // <-- Thêm trường này để nhận số điểm người dùng muốn sử dụng
 
 }

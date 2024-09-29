@@ -46,12 +46,13 @@ public interface ReportRepo extends JpaRepository<Booking, Long> {
 
 
     @Query(value = """
-            select new com.ticketbooking.dto.TopRouteDto(concat(b.trip.source.name, ' - ', b.trip.destination.name), count(b.trip.id))
-            from Booking b
-            where date(b.bookingDateTime) between :startDate and :endDate and b.paymentStatus='PAID'
-            group by concat(b.trip.source.name, ' - ', b.trip.destination.name)
-            order by count(b.trip.id) desc
-            limit 5
-            """)
-    List<TopRouteDto> getMonthTopRoute(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    select new com.ticketbooking.dto.TopRouteDto(concat(b.trip.source.name, ' - ', b.trip.destination.name), count(b.trip.id))
+    from Booking b
+    where date(b.bookingDateTime) between :startDate and :endDate and b.paymentStatus='PAID'
+    group by concat(b.trip.source.name, ' - ', b.trip.destination.name)
+    order by count(b.trip.id) desc
+    limit 5
+""")
+    List<TopRouteDto> getTopRoute(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
 }

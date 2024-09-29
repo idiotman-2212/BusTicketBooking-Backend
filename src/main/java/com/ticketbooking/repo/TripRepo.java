@@ -58,4 +58,7 @@ public interface TripRepo extends JpaRepository<Trip, Long> {
             @Param("driverId") Long driverId,
             @Param("fromDateTime") LocalDateTime fromDateTime,
             @Param("toDateTime") LocalDateTime toDateTime);
+
+    List<Trip> findByCompletedFalse(); // Tìm các chuyến đi chưa hoàn thành
+
 }
