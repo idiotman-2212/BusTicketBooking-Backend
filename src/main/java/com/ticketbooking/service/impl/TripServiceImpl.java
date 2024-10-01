@@ -4,15 +4,9 @@ import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.exception.ExistingResourceException;
 import com.ticketbooking.exception.InvalidInputException;
 import com.ticketbooking.exception.ResourceNotFoundException;
-import com.ticketbooking.model.Booking;
-import com.ticketbooking.model.LoyaltyTransaction;
-import com.ticketbooking.model.Trip;
-import com.ticketbooking.model.User;
+import com.ticketbooking.model.*;
 import com.ticketbooking.model.enumType.PaymentStatus;
-import com.ticketbooking.repo.BookingRepo;
-import com.ticketbooking.repo.LoyaltyTransactionRepo;
-import com.ticketbooking.repo.TripRepo;
-import com.ticketbooking.repo.UserRepo;
+import com.ticketbooking.repo.*;
 import com.ticketbooking.service.TripService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +33,7 @@ public class TripServiceImpl implements TripService {
     private final BookingRepo bookingRepo;
     private final UserRepo userRepo;
     private final LoyaltyTransactionRepo loyaltyTransactionRepo;
+    private final NotificationRepo notificationRepo;
 
     @Override
     public Trip findById(Long id) {
@@ -71,7 +66,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional
     public void completeTrip(Long tripId) {
-        // Tìm chuyến đi theo ID
+
         Trip trip = tripRepo.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip not found with ID: " + tripId));
 
@@ -122,7 +117,6 @@ public class TripServiceImpl implements TripService {
                 // Cộng điểm xu vào tài khoản của người dùng
                 user.addLoyaltyPoints(pointsEarned);
 
-                // Tạo giao dịch tích điểm vào bảng LoyaltyTransaction
                 LoyaltyTransaction transaction = LoyaltyTransaction.builder()
                         .user(user)
                         .booking(booking)
@@ -131,18 +125,37 @@ public class TripServiceImpl implements TripService {
                         .transactionType(LoyaltyTransaction.TransactionType.EARN)
                         .build();
 
-                // Lưu các thay đổi vào các repo
+
                 userRepo.save(user);
                 loyaltyTransactionRepo.save(transaction);
                 bookingRepo.save(booking);
 
                 System.out.println("Loyalty points and transaction saved for booking " + booking.getId());
+                sendNotificationToUser(user, trip, pointsEarned);
             } else {
                 System.out.println("Booking " + booking.getId() + " is not eligible for points.");
             }
         }
     }
 
+    private void sendNotificationToUser(User user, Trip trip, BigDecimal pointsEarned) {
+        // Tin nhắn thông báo chi tiết
+        String title = "THÔNG BÁO HOÀN THÀNH CHUYẾN ĐI";
+        String message = "Chuyến đi của bạn từ " + trip.getSource().getName() + " đến " + trip.getDestination().getName()
+                + " đã hoàn thành. Bạn đã nhận được " + pointsEarned + " điểm xu vào tài khoản của mình. "
+                + "Chúng tôi hy vọng bạn đã có một chuyến đi tuyệt vời và mong sớm gặp lại bạn!";
+
+        // Tạo đối tượng Notification và lưu vào cơ sở dữ liệu
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setTrip(trip);
+        notification.setTitle(title);
+        notification.setMessage(message);
+
+        notificationRepo.save(notification);
+
+        System.out.println("Notification sent to user: " + user.getUsername() + " for trip ID: " + trip.getId());
+    }
 
 
     @Override

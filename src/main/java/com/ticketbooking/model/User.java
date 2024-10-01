@@ -60,7 +60,6 @@ public class User implements UserDetails {
     @Column(name = "loyalty_points", nullable = false, columnDefinition = "decimal(38,2) default 0")
      BigDecimal loyaltyPoints  = BigDecimal.ZERO;
 
-    @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     @JsonIgnore
     List<LoyaltyTransaction> loyaltyTransactions;
@@ -83,6 +82,9 @@ public class User implements UserDetails {
         return this.loyaltyPoints.compareTo(points) >= 0;
     }
 
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    List<Notification> notifications;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
      List<UserPermission> permissions;

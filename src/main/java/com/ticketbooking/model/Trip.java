@@ -63,5 +63,9 @@ public class Trip {
      List<Booking> bookings;
 
     Boolean completed = false;
+
+    @OneToMany(mappedBy = "trip")
+    @JsonIgnore
+    List<Notification> notifications;
 }
 
