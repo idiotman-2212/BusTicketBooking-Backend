@@ -2,37 +2,49 @@ package com.ticketbooking.service.impl;
 
 import com.ticketbooking.dto.EmailMessage;
 import com.ticketbooking.dto.NotificationDTO;
+import com.ticketbooking.dto.NotificationRequest;
+import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.exception.ResourceNotFoundException;
-import com.ticketbooking.model.Notification;
-import com.ticketbooking.model.Trip;
-import com.ticketbooking.model.User;
+import com.ticketbooking.model.*;
+import com.ticketbooking.model.enumType.RecipientType;
 import com.ticketbooking.repo.NotificationRepo;
+import com.ticketbooking.repo.TripRepo;
+import com.ticketbooking.repo.UserNotificationRepo;
 import com.ticketbooking.repo.UserRepo;
 import com.ticketbooking.service.MailService;
 import com.ticketbooking.service.NotificationService;
 import com.ticketbooking.service.SmsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationServiceImpl  implements NotificationService {
+public class NotificationServiceImpl implements NotificationService {
 
     private final SmsService smsService;
     private final MailService mailService;
     private final Environment env;
     private final NotificationRepo notificationRepo;
+    private final UserNotificationRepo userNotificationRepo;
     private final UserRepo userRepo;
+    private final TripRepo tripRepo;
 
     @Override
     public void sendSmsConfirmation(String phoneNumber, String source, String destination, String busInfo, String departureTime, String seatNumbers, BigDecimal totalPayment) {
@@ -91,132 +103,218 @@ public class NotificationServiceImpl  implements NotificationService {
     }
 
     @Override
-    public List<NotificationDTO> getNotificationsForUser(String username) {
-        List<Notification> notifications = notificationRepo.findByUser_UsernameOrderByCreatedAtDesc(username);
-
-        return notifications.stream()
-                .map(notification -> {
-                    User user = notification.getUser();
-                    Trip trip = notification.getTrip();
-
-                    return new NotificationDTO(
-                            notification.getId(),
-                            notification.getTitle(),
-                            notification.getMessage(),
-                            notification.getCreatedAt(),
-                            notification.isRead(),
-                            user != null ? user.getUsername() : null,
-                            user != null ? user.getEmail() : null,
-                            user != null ? user.getFirstName() : null,
-                            user != null ? user.getLastName() : null,
-                            trip != null ? trip.getId() : null,
-                            trip != null ? trip.getSource().getName() : null,
-                            trip != null ? trip.getDestination().getName() : null,
-                            trip != null ? trip.getDepartureDateTime() : null,
-                            trip != null ? trip.getPrice() : null
-                    );
-                })
-                .collect(Collectors.toList());
+    public Notification findById(Long id) {
+        return notificationRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not found notification with id: " + id));
     }
 
     @Override
-    public List<NotificationDTO> getRecentNotificationsForUser(String username) {
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        List<Notification> notifications = notificationRepo.findRecentNotifications(username, sevenDaysAgo);
-        return notifications
+    @Cacheable(cacheNames = {"notifications_paging"}, key = "{#page, #limit}")
+    public PageResponse<NotificationDTO> findAll(Integer page, Integer limit) {
+        Page<Notification> pageSlice = notificationRepo.findAll(PageRequest.of(page, limit));
+        List<NotificationDTO> notificationDTOs = pageSlice.getContent()
                 .stream()
-                .map(notification -> {
-                    User user = notification.getUser();
-                    Trip trip = notification.getTrip();
-
-                    return NotificationDTO.builder()
-                            .id(notification.getId())
-                            .title(notification.getTitle())
-                            .message(notification.getMessage())
-                            .createdAt(notification.getCreatedAt())
-                            .isRead(notification.isRead())
-                            .username(user != null ? user.getUsername() : null)
-                            .email(user != null ? user.getEmail() : null)
-                            .firstName(user != null ? user.getFirstName() : null)
-                            .lastName(user != null ? user.getLastName() : null)
-                            .tripId(trip != null ? trip.getId() : null)
-                            .source(trip != null ? trip.getSource().getName() : null)
-                            .destination(trip != null ? trip.getDestination().getName() : null)
-                            .departureTime(trip != null ? trip.getDepartureDateTime() : null)
-                            .price(trip != null ? trip.getPrice() : null)
-                            .build();
-                })
+                .map(this::convertToDTO)
                 .collect(Collectors.toList());
-    }
 
-    @Override
-    public List<NotificationDTO> getUnreadNotificationsForUser(String username) {
-        List<Notification> unreadNotifications = notificationRepo.findByUser_UsernameAndIsReadFalse(username);
+        PageResponse<NotificationDTO> pageResponse = new PageResponse<>();
+        pageResponse.setDataList(notificationDTOs);
+        pageResponse.setPageCount(pageSlice.getTotalPages());
+        pageResponse.setTotalElements(pageSlice.getTotalElements());
 
-        return unreadNotifications.stream()
-                .map(notification -> {
-                    User user = notification.getUser();
-                    Trip trip = notification.getTrip();
-
-                    return new NotificationDTO(
-                            notification.getId(),
-                            notification.getTitle(),
-                            notification.getMessage(),
-                            notification.getCreatedAt(),
-                            notification.isRead(),
-                            user != null ? user.getUsername() : null,
-                            user != null ? user.getEmail() : null,
-                            user != null ? user.getFirstName() : null,
-                            user != null ? user.getLastName() : null,
-                            trip != null ? trip.getId() : null,
-                            trip != null ? trip.getSource().getName() : null,
-                            trip != null ? trip.getDestination().getName() : null,
-                            trip != null ? trip.getDepartureDateTime() : null,
-                            trip != null ? trip.getPrice() : null
-                    );
-                })
-                .collect(Collectors.toList());
+        return pageResponse;
     }
 
 
+    // Gửi thông báo khi chuyến đi hoàn thành
     @Override
-    public void markNotificationAsRead(Long notificationId) {
-        Notification notification = notificationRepo.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
-        if (!notification.isRead()) {
-            notification.setRead(true);
-            notificationRepo.save(notification);
+    public void sendTripCompletionNotification(Long tripId) {
+        Trip trip = tripRepo.findById(tripId).orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+
+        Notification notification = new Notification();
+        notification.setTitle("Chuyến đi đã hoàn thành");
+        notification.setMessage("Chuyến đi của bạn đã hoàn thành. Bạn đã nhận được điểm thưởng.");
+        notification.setSendDateTime(LocalDateTime.now());
+        notification.setRecipientType(RecipientType.GROUP);
+        notification.setTrip(trip);
+        notificationRepo.save(notification);
+
+        List<Booking> bookings = trip.getBookings();
+        for (Booking booking : bookings) {
+            UserNotification userNotification = new UserNotification();
+            userNotification.setNotification(notification);
+            userNotification.setUser(booking.getUser());
+            userNotificationRepo.save(userNotification);
         }
     }
 
+    // Gửi thông báo từ admin
     @Override
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
     @Transactional
-    public Notification addNotificationForUser(String username,String title, String message) {
-        User user = userRepo.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public void sendNotification(NotificationRequest request) {
+        String senderUsername = getCurrentUsername();  // Lấy username của người gửi từ session
+        User sender = userRepo.findByUsername(senderUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("Sender not found"));
 
-        Notification notification = new Notification();
-        notification.setUser(user);
-        notification.setTitle(title);
-        notification.setMessage(message);
-        LocalDateTime nowInVietnam = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-        notification.setCreatedAt(nowInVietnam);
+        Notification notification = Notification.builder()
+                .title(request.getTitle())
+                .message(request.getMessage())
+                .sendDateTime(LocalDateTime.now())
+                .sender(sender)
+                .recipientType(request.getRecipientType())
+                .build();
+
+        List<User> recipients = new ArrayList<>();
+
+        if (request.getRecipientType() == RecipientType.ALL) {
+            // Gửi cho tất cả người dùng
+            recipients = userRepo.findAll();
+            notification.setRecipientIdentifiers("ALL_USERS");
+        } else if (request.getRecipientType() == RecipientType.GROUP) {
+            // Gửi cho nhóm người dùng
+            recipients = request.getRecipientIdentifiers().stream()
+                    .map(username -> userRepo.findByUsername(username)
+                            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username)))
+                    .collect(Collectors.toList());
+            notification.setRecipientIdentifiers(String.join(",", request.getRecipientIdentifiers()));
+        } else if (request.getRecipientType() == RecipientType.INDIVIDUAL) {
+            // Gửi cho một người dùng cụ thể
+            if (request.getRecipientIdentifiers().size() == 1) {
+                String username = request.getRecipientIdentifiers().get(0);
+                User user = userRepo.findByUsername(username)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+                recipients.add(user);
+                notification.setRecipientIdentifiers(username);
+            }
+        }
+
         notificationRepo.save(notification);
-        return notification;
+
+        // Liên kết với từng người nhận trong danh sách
+        for (User user : recipients) {
+            UserNotification userNotification = new UserNotification();
+            userNotification.setNotification(notification);
+            userNotification.setUser(user);
+            userNotificationRepo.save(userNotification);
+        }
     }
 
+    // Lấy danh sách thông báo của người dùng
     @Override
-    @Transactional
-    public void deleteNotification(Long notificationId) {
-        notificationRepo.deleteById(notificationId);
+    public List<UserNotification> getUserNotifications(String username) {
+        return userNotificationRepo.findByUser_UsernameOrderByNotification_SendDateTimeDesc(username);
     }
 
+    // Đánh dấu thông báo là đã đọc
     @Override
-    @Transactional
-    public void updateNotification(Long notificationId, String newMessage) {
-        Notification notification = notificationRepo.findById(notificationId)
+    public void markAsRead(Long notificationId, String username) {
+        UserNotification userNotification = userNotificationRepo.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
-        notification.setMessage(newMessage);
+        if (!userNotification.getUser().getUsername().equals(username)) {
+            throw new AccessDeniedException("Bạn không có quyền đánh dấu thông báo này.");
+        }
+        userNotification.setIsRead(true);
+        userNotification.setReadDateTime(LocalDateTime.now());
+        userNotificationRepo.save(userNotification);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
+    public void updateNotification(Long notificationId, NotificationRequest request) {
+        // Lấy thông báo hiện tại từ cơ sở dữ liệu
+        Notification notification = notificationRepo.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + notificationId));
+
+        // Cập nhật các thông tin cơ bản của thông báo
+        notification.setTitle(request.getTitle());
+        notification.setMessage(request.getMessage());
+        notification.setSendDateTime(LocalDateTime.now());
+        notification.setRecipientType(request.getRecipientType());
+
+        List<User> recipients = new ArrayList<>();
+
+        if (request.getRecipientType() == RecipientType.ALL) {
+            recipients = userRepo.findAll();
+            notification.setRecipientIdentifiers("ALL_USERS");
+        } else if (request.getRecipientType() == RecipientType.GROUP) {
+            recipients = request.getRecipientIdentifiers().stream()
+                    .map(username -> userRepo.findByUsername(username)
+                            .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username)))
+                    .collect(Collectors.toList());
+            notification.setRecipientIdentifiers(String.join(",", request.getRecipientIdentifiers()));
+        } else if (request.getRecipientType() == RecipientType.INDIVIDUAL) {
+            if (request.getRecipientIdentifiers().size() == 1) {
+                String username = request.getRecipientIdentifiers().get(0);
+                User user = userRepo.findByUsername(username)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+                recipients.add(user);
+                notification.setRecipientIdentifiers(username);
+            } else {
+                throw new IllegalArgumentException("RecipientIdentifiers must contain exactly one user for INDIVIDUAL type.");
+            }
+        }
+
+        userNotificationRepo.deleteByNotificationId(notification.getId());
+
+        // Cập nhật các UserNotification mới
+        for (User user : recipients) {
+            UserNotification userNotification = new UserNotification();
+            userNotification.setNotification(notification);
+            userNotification.setUser(user);
+            userNotificationRepo.save(userNotification);
+        }
+
         notificationRepo.save(notification);
     }
+
+    @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
+    public void deleteNotificationById(Long notificationId) {
+        // Tìm thông báo từ cơ sở dữ liệu
+        Notification notification = notificationRepo.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + notificationId));
+
+        // Xóa các UserNotification liên quan đến thông báo
+        userNotificationRepo.deleteByNotificationId(notification.getId());
+
+        // Xóa chính thông báo
+        notificationRepo.delete(notification);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
+    public void deleteAllNotifications() {
+        // Xóa tất cả UserNotification trước
+        userNotificationRepo.deleteAll();
+
+        // Xóa tất cả thông báo trong hệ thống
+        notificationRepo.deleteAll();
+    }
+
+
+
+
+    public String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
+
+    private NotificationDTO convertToDTO(Notification notification) {
+        return NotificationDTO.builder()
+                .id(notification.getId())
+                .title(notification.getTitle())
+                .message(notification.getMessage())
+                .sendDateTime(notification.getSendDateTime())
+                .senderUsername(notification.getSender() != null ? notification.getSender().getUsername() : null)
+                .recipientType(notification.getRecipientType().name())
+                .recipientIdentifiers(notification.getRecipientIdentifiers())
+                .tripId(notification.getTrip() != null ? notification.getTrip().getId() : null)
+                .build();
+    }
+
+
+
 }

@@ -2,7 +2,6 @@ package com.ticketbooking.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.ticketbooking.utils.AppConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -16,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,37 +28,37 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class User implements UserDetails {
     @Id
-     String username;
+    String username;
 
     @NotEmpty(message = "Password should not be empty")
-     String password;
+    String password;
 
     @NotEmpty(message = "First name should not be empty")
-     String firstName;
+    String firstName;
 
     @NotEmpty(message = "Last name should not be empty")
-     String lastName;
+    String lastName;
 
     @Column(unique = true)
     @Email(regexp = AppConstants.EMAIL_REGEX_PATTERN, message = "Invalid email")
-     String email;
+    String email;
 
     @Column(unique = true)
     @Pattern(regexp = AppConstants.PHONE_REGEX_PATTERN, message = "Invalid phone")
-     String phone;
+    String phone;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-     LocalDate dob;
+    LocalDate dob;
 
-     Boolean gender;
+    Boolean gender;
 
-     String address;
+    String address;
 
-     Boolean active;
+    Boolean active;
 
-     //Tích xu
+    //Tích xu
     @Column(name = "loyalty_points", nullable = false, columnDefinition = "decimal(38,2) default 0")
-     BigDecimal loyaltyPoints  = BigDecimal.ZERO;
+    BigDecimal loyaltyPoints = BigDecimal.ZERO;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     @JsonIgnore
@@ -82,20 +82,25 @@ public class User implements UserDetails {
         return this.loyaltyPoints.compareTo(points) >= 0;
     }
 
-    @OneToMany(mappedBy = "user")
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
-    List<Notification> notifications;
+    List<UserNotification> userNotifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Notification> sentNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-     List<UserPermission> permissions;
+    List<UserPermission> permissions;
 
     @JsonIgnore
     @OneToMany(mappedBy = "user")
-     List<Booking> bookings;
+    List<Booking> bookings;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
     @JsonIgnore
-     List<Token> tokens;
+    List<Token> tokens;
 
     @Override
     @JsonIgnore

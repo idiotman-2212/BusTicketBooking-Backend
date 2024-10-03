@@ -1,9 +1,9 @@
 package com.ticketbooking.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -15,19 +15,11 @@ public class NotificationDTO {
      Long id;
      String title;
      String message;
-     LocalDateTime createdAt;
-     boolean isRead;
 
-     // Thông tin từ User
-      String username;
-      String email;
-      String firstName;
-      String lastName;
-
-     // Thông tin từ Trip
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+     LocalDateTime sendDateTime;
+    String senderUsername;
+     String recipientType;
+     String recipientIdentifiers;
       Long tripId;
-      String source;
-      String destination;
-      LocalDateTime departureTime;
-      BigDecimal price;
 }

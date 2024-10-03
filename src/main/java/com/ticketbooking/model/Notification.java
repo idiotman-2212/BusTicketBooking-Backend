@@ -2,43 +2,49 @@ package com.ticketbooking.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ticketbooking.model.enumType.RecipientType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "Notification")
 @Data
-
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
-public class Notification {
+public class  Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
      Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "username", referencedColumnName = "username", nullable = false)
-    @JsonIgnore
-     User user;
-
-    @ManyToOne
-    @JoinColumn(name = "trip_id", referencedColumnName = "id")
-    @JsonIgnore
-     Trip trip;
-
     String title;
     String message;
 
-    @Column(name = "created_at")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-     LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    LocalDateTime sendDateTime;
 
-    @Column(name = "is_read", nullable = false)
-     boolean isRead = false;
+    @ManyToOne
+    @JoinColumn(name = "sender_username")
+     User sender;
+
+    @Enumerated(EnumType.STRING)
+     RecipientType recipientType;
+
+     String recipientIdentifiers;
+
+    @ManyToOne
+    @JoinColumn(name = "trip_id")
+     Trip trip;
+
+    @OneToMany(mappedBy = "notification", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<UserNotification> userNotifications = new ArrayList<>();
+
 }
+

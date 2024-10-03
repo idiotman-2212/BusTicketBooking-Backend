@@ -98,7 +98,8 @@ public class UserServiceImpl implements UserService {
         Role role;
         if (user.getPermissions() == null || user.getPermissions().isEmpty()) {
             role = roleRepo.findByRoleCode(RoleCode.ROLE_STAFF).get();
-        } else role = roleRepo.findByRoleCode(user.getPermissions().get(0).getRole().getRoleCode()).get(); // role Customer
+        } else
+            role = roleRepo.findByRoleCode(user.getPermissions().get(0).getRole().getRoleCode()).get(); // role Customer
         UserPermission permission = UserPermission
                 .builder()
                 .user(createdUser)

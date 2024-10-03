@@ -8,9 +8,8 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -64,8 +63,7 @@ public class Trip {
 
     Boolean completed = false;
 
-    @OneToMany(mappedBy = "trip")
-    @JsonIgnore
-    List<Notification> notifications;
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+     List<Notification> notifications = new ArrayList<>();
 }
 

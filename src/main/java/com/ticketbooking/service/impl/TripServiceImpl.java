@@ -6,13 +6,13 @@ import com.ticketbooking.exception.InvalidInputException;
 import com.ticketbooking.exception.ResourceNotFoundException;
 import com.ticketbooking.model.*;
 import com.ticketbooking.model.enumType.PaymentStatus;
+import com.ticketbooking.model.enumType.RecipientType;
 import com.ticketbooking.repo.*;
 import com.ticketbooking.service.TripService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,8 +21,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -33,6 +33,7 @@ public class TripServiceImpl implements TripService {
     private final BookingRepo bookingRepo;
     private final UserRepo userRepo;
     private final LoyaltyTransactionRepo loyaltyTransactionRepo;
+    private final UserNotificationRepo userNotificationRepo;
     private final NotificationRepo notificationRepo;
 
     @Override
@@ -84,7 +85,6 @@ public class TripServiceImpl implements TripService {
             throw new InvalidInputException("Trip has not been completed yet.");
         }
 
-        // Đánh dấu chuyến đi đã hoàn thành
         trip.setCompleted(true);
         tripRepo.save(trip);
 
@@ -96,13 +96,11 @@ public class TripServiceImpl implements TripService {
         for (Booking booking : bookings) {
             User user = booking.getUser();
 
-            // Kiểm tra nếu booking không có người dùng liên quan
             if (user == null) {
                 System.out.println("Booking " + booking.getId() + " does not have a user associated with it. No points will be earned.");
                 continue;
             }
 
-            // Kiểm tra xem giao dịch đã được tạo cho booking này chưa
             boolean transactionExists = loyaltyTransactionRepo.existsByBookingId(booking.getId());
 
             // Điều kiện: Trạng thái thanh toán là PAID và chưa tồn tại giao dịch trước đó
@@ -131,30 +129,38 @@ public class TripServiceImpl implements TripService {
                 bookingRepo.save(booking);
 
                 System.out.println("Loyalty points and transaction saved for booking " + booking.getId());
-                sendNotificationToUser(user, trip, pointsEarned);
+                // Gửi thông báo đến người dùng
+                String title = "THÔNG BÁO HOÀN THÀNH CHUYẾN ĐI";
+                String message = "Chuyến đi của bạn từ " + trip.getSource().getName() + " đến " + trip.getDestination().getName()
+                        + " đã hoàn thành. Bạn đã nhận được " + pointsEarned + " điểm xu vào tài khoản của mình. "
+                        + "Chúng tôi hy vọng bạn đã có một chuyến đi tuyệt vời và mong sớm gặp lại bạn!";
+
+                sendNotificationToUser(user, title, message);
             } else {
                 System.out.println("Booking " + booking.getId() + " is not eligible for points.");
             }
         }
     }
 
-    private void sendNotificationToUser(User user, Trip trip, BigDecimal pointsEarned) {
-        // Tin nhắn thông báo chi tiết
-        String title = "THÔNG BÁO HOÀN THÀNH CHUYẾN ĐI";
-        String message = "Chuyến đi của bạn từ " + trip.getSource().getName() + " đến " + trip.getDestination().getName()
-                + " đã hoàn thành. Bạn đã nhận được " + pointsEarned + " điểm xu vào tài khoản của mình. "
-                + "Chúng tôi hy vọng bạn đã có một chuyến đi tuyệt vời và mong sớm gặp lại bạn!";
-
-        // Tạo đối tượng Notification và lưu vào cơ sở dữ liệu
+    private void sendNotificationToUser(User user, String title, String message) {
+        // Tạo đối tượng Notification
         Notification notification = new Notification();
-        notification.setUser(user);
-        notification.setTrip(trip);
         notification.setTitle(title);
         notification.setMessage(message);
-
+        notification.setSendDateTime(LocalDateTime.now());
+        notification.setSender(null); // Hoặc bạn có thể đặt là hệ thống
+        notification.setRecipientType(RecipientType.INDIVIDUAL);
+        notification.setRecipientIdentifiers(user.getUsername());
         notificationRepo.save(notification);
 
-        System.out.println("Notification sent to user: " + user.getUsername() + " for trip ID: " + trip.getId());
+        // Tạo UserNotification để liên kết thông báo với người dùng
+        UserNotification userNotification = new UserNotification();
+        userNotification.setNotification(notification);
+        userNotification.setUser(user);
+        userNotification.setIsRead(false);
+        userNotificationRepo.save(userNotification);
+
+        System.out.println("Notification sent to user: " + user.getUsername());
     }
 
 
@@ -280,9 +286,9 @@ public class TripServiceImpl implements TripService {
     }
 
     // Phương thức tự động cập nhật trạng thái completed cho các chuyến đi chưa hoàn thành
-    @Scheduled(fixedRate = 3600000) // Chạy mỗi giờ
+    @Scheduled(fixedRate = 3600000)
     public void updateCompletedTrips() {
-        List<Trip> incompleteTrips = tripRepo.findByCompletedFalse(); // Lấy các chuyến đi chưa hoàn thành
+        List<Trip> incompleteTrips = tripRepo.findByCompletedFalse();
 
         for (Trip trip : incompleteTrips) {
             double duration = trip.getDuration();
@@ -296,7 +302,7 @@ public class TripServiceImpl implements TripService {
             // Nếu thời gian hiện tại lớn hơn thời gian hoàn thành dự kiến
             if (LocalDateTime.now().isAfter(estimatedCompletionTime)) {
                 trip.setCompleted(true);
-                completeTrip(trip.getId()); // Gọi phương thức hoàn thành chuyến đi và tích điểm
+                completeTrip(trip.getId());
                 tripRepo.save(trip);
             }
         }
