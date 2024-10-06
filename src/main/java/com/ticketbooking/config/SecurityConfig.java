@@ -89,7 +89,7 @@ public class SecurityConfig {
                 "http://localhost:3001",
                 "http://chauhuydien.id.vn"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true); // Set this to true if you need credentials like cookies or JWT
 
@@ -113,6 +113,7 @@ public class SecurityConfig {
                                 "/api/v1/trips/**",
                                 "/api/v1/language/**"
                         ).permitAll() // Public API endpoints
+                        .requestMatchers("/api/v1/notifications/**").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger and API documentation
                         .anyRequest().authenticated() // All other requests require authentication
                 )

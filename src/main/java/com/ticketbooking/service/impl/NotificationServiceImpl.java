@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -199,24 +200,68 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    public List<NotificationDTO> getUnreadNotificationsForUser(String username) {
+        List<UserNotification> unreadNotifications = userNotificationRepo.findByUser_UsernameAndNotDeleted(username);
+        return unreadNotifications.stream()
+                .map(userNotification -> convertToDTO(userNotification.getNotification()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<NotificationDTO> getRecentNotificationsForUser(String username) {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        List<UserNotification> recentNotifications = userNotificationRepo.findRecentByUserAndNotDeleted(username, sevenDaysAgo);
+        return recentNotifications.stream()
+                .map(userNotification -> convertToDTO(userNotification.getNotification()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void softDeleteNotification(Long notificationId, String username) {
+        Optional<UserNotification> userNotificationOpt = userNotificationRepo.findFirstByNotificationIdAndUsername(notificationId, username);
+
+        if (userNotificationOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Notification not found or already deleted");
+        }
+
+        UserNotification userNotification = userNotificationOpt.get();
+        userNotification.setIsDeleted(true);
+        userNotificationRepo.save(userNotification);
+    }
+
+
     // Lấy danh sách thông báo của người dùng
     @Override
-    public List<UserNotification> getUserNotifications(String username) {
-        return userNotificationRepo.findByUser_UsernameOrderByNotification_SendDateTimeDesc(username);
+    public List<NotificationDTO> getAllNotificationsForUser(String username) {
+        List<UserNotification> userNotifications = userNotificationRepo.findByUser_UsernameAndNotDeleted(username);
+        return userNotifications.stream()
+                .map(userNotification -> convertToDTO(userNotification.getNotification())) // Chuyển đổi sang DTO
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public long getUnreadNotificationCount(String username) {
+        return userNotificationRepo.countUnreadNotifications(username);
     }
 
     // Đánh dấu thông báo là đã đọc
     @Override
+    @Transactional
     public void markAsRead(Long notificationId, String username) {
-        UserNotification userNotification = userNotificationRepo.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
-        if (!userNotification.getUser().getUsername().equals(username)) {
-            throw new AccessDeniedException("Bạn không có quyền đánh dấu thông báo này.");
+        UserNotification userNotification = userNotificationRepo.findByNotification_IdAndUser_Username(notificationId, username)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thông báo với ID: " + notificationId + " cho người dùng: " + username));
+
+        if (!userNotification.getIsRead()) {
+            userNotification.setIsRead(true);
+            userNotification.setReadDateTime(LocalDateTime.now());
+            userNotificationRepo.save(userNotification);
         }
-        userNotification.setIsRead(true);
-        userNotification.setReadDateTime(LocalDateTime.now());
-        userNotificationRepo.save(userNotification);
     }
+
+
 
     @Override
     @Transactional
@@ -294,7 +339,11 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepo.deleteAll();
     }
 
-
+    @Override
+    public List<UserNotification> getRecentNotifications(String username) {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return userNotificationRepo.findByUser_UsernameAndNotification_SendDateTimeAfter(username, sevenDaysAgo);
+    }
 
 
     public String getCurrentUsername() {

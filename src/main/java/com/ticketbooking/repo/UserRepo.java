@@ -35,8 +35,6 @@ public interface UserRepo extends JpaRepository<User, String> {
     @Query("UPDATE User u SET u.loyaltyPoints = u.loyaltyPoints - :points WHERE u.username = :username")
     void deductLoyaltyPoints(@Param("username") String username, @Param("points") BigDecimal points);
 
-    List<User> findAllByUsernameIn(List<String> usernames);
-
     List<User> findByUsernameIn(List<String> recipientIdentifiers);
 
     @Query("SELECT u FROM User u JOIN u.permissions p JOIN p.role r WHERE r.roleCode IN :roleCodes")

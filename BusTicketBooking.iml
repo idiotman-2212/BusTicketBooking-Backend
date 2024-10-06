@@ -121,7 +121,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.objenesis:objenesis:3.3" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-junit-jupiter:5.3.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.skyscreamer:jsonassert:1.5.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.vaadin.external.google:android-json:0.0.20131108.vaadin1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-core:6.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-jcl:6.0.10" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.springframework:spring-test:6.0.10" level="project" />
@@ -200,5 +199,6 @@
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-websocket:3.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-messaging:6.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-websocket:6.0.10" level="project" />
+    <orderEntry type="library" name="Maven: com.vaadin.external.google:android-json:0.0.20131108.vaadin1" level="project" />
   </component>
 </module>

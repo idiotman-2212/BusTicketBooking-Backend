@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 @Builder
 public class NotificationDTO {
-     Long id;
-     String title;
-     String message;
+    Long id;
+    String title;
+    String message;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-     LocalDateTime sendDateTime;
+    LocalDateTime sendDateTime;
     String senderUsername;
-     String recipientType;
-     String recipientIdentifiers;
-      Long tripId;
+    String recipientType;
+    String recipientIdentifiers;
+    Long tripId;
 }

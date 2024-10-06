@@ -1,5 +1,6 @@
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\service\BookingService.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\exception\InvalidInputException.java
+C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\repo\UserNotificationRepo.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\service\ReportService.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\repo\DiscountRepo.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\repo\DriverRepo.java
@@ -45,6 +46,7 @@ C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\mai
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\model\enumType\CoachType.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\service\impl\BookingServiceImpl.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\BusTicketBookingApplication.java
+C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\model\enumType\RecipientType.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\service\MailService.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\dto\ScreenPermissionDto.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\model\Province.java
@@ -99,6 +101,7 @@ C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\mai
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\dto\YearRevenueDto.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\repo\LoyaltyTransactionRepo.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\dto\ReportResponse.java
+C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\model\UserNotification.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\repo\UserPermissionRepo.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\service\DiscountService.java
 C:\Users\dienc\Desktop\ThucTap\BusTicketBooking\BusTicketBooking-Backend\src\main\java\com\ticketbooking\service\UserPermissionService.java

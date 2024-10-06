@@ -14,6 +14,7 @@ com\ticketbooking\service\TripService.class
 com\ticketbooking\dto\ChangePwdRequest.class
 com\ticketbooking\exception\UnauthorizedException.class
 com\ticketbooking\model\Notification.class
+com\ticketbooking\repo\UserNotificationRepo.class
 com\ticketbooking\service\impl\AuthenticationServiceImpl.class
 com\ticketbooking\dto\PageResponse.class
 com\ticketbooking\model\Token$TokenBuilder.class
@@ -58,6 +59,7 @@ com\ticketbooking\model\Driver.class
 com\ticketbooking\model\Trip$TripBuilder.class
 com\ticketbooking\model\Booking$BookingBuilder.class
 com\ticketbooking\exception\ApiErrorResponse$ApiErrorResponseBuilder.class
+com\ticketbooking\model\UserNotification$UserNotificationBuilder.class
 com\ticketbooking\exception\ObjectNotValidException.class
 com\ticketbooking\dto\ChangePwdRequest$ChangePwdRequestBuilder.class
 com\ticketbooking\repo\UserRepo.class
@@ -69,6 +71,7 @@ com\ticketbooking\service\AuthenticationService.class
 com\ticketbooking\BusTicketBookingApplication.class
 com\ticketbooking\service\DriverService.class
 com\ticketbooking\model\Booking.class
+com\ticketbooking\model\UserNotification.class
 com\ticketbooking\model\UserPermission$UserPermissionBuilder.class
 com\ticketbooking\config\PasswordEncoderBean.class
 com\ticketbooking\service\ProvinceService.class
@@ -106,6 +109,7 @@ com\ticketbooking\model\Driver$DriverBuilder.class
 com\ticketbooking\service\NotificationService.class
 com\ticketbooking\service\PaymentHistoryService.class
 com\ticketbooking\model\Discount.class
+com\ticketbooking\model\enumType\RecipientType.class
 com\ticketbooking\config\SecurityConfig.class
 com\ticketbooking\service\impl\UserServiceImpl.class
 com\ticketbooking\dto\YearRevenueDto.class
