@@ -86,4 +86,5 @@ public class BookingController {
         List<Booking> bookings = bookingService.findBookingsByPhone(phone);
         return ResponseEntity.ok(bookings);
     }
+
 }

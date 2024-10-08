@@ -4,10 +4,7 @@ import com.ticketbooking.dto.BookingRequest;
 import com.ticketbooking.dto.EmailMessage;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.exception.ResourceNotFoundException;
-import com.ticketbooking.model.Booking;
-import com.ticketbooking.model.LoyaltyTransaction;
-import com.ticketbooking.model.PaymentHistory;
-import com.ticketbooking.model.User;
+import com.ticketbooking.model.*;
 import com.ticketbooking.model.enumType.PaymentStatus;
 import com.ticketbooking.repo.BookingRepo;
 import com.ticketbooking.repo.LoyaltyTransactionRepo;
@@ -351,4 +348,6 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> findBookingsByPhone(String phone) {
         return bookingRepo.findByPhone(phone);
     }
+
+
 }

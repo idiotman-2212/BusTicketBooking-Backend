@@ -98,6 +98,7 @@ public class NotificationServiceImpl implements NotificationService {
         mailService.send(emailMessage);
     }
 
+
     @Override
     public List<Notification> findAll() {
         return notificationRepo.findAll();
@@ -123,29 +124,6 @@ public class NotificationServiceImpl implements NotificationService {
         pageResponse.setTotalElements(pageSlice.getTotalElements());
 
         return pageResponse;
-    }
-
-
-    // Gửi thông báo khi chuyến đi hoàn thành
-    @Override
-    public void sendTripCompletionNotification(Long tripId) {
-        Trip trip = tripRepo.findById(tripId).orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
-
-        Notification notification = new Notification();
-        notification.setTitle("Chuyến đi đã hoàn thành");
-        notification.setMessage("Chuyến đi của bạn đã hoàn thành. Bạn đã nhận được điểm thưởng.");
-        notification.setSendDateTime(LocalDateTime.now());
-        notification.setRecipientType(RecipientType.GROUP);
-        notification.setTrip(trip);
-        notificationRepo.save(notification);
-
-        List<Booking> bookings = trip.getBookings();
-        for (Booking booking : bookings) {
-            UserNotification userNotification = new UserNotification();
-            userNotification.setNotification(notification);
-            userNotification.setUser(booking.getUser());
-            userNotificationRepo.save(userNotification);
-        }
     }
 
     // Gửi thông báo từ admin
@@ -202,11 +180,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationDTO> getUnreadNotificationsForUser(String username) {
-        List<UserNotification> unreadNotifications = userNotificationRepo.findByUser_UsernameAndNotDeleted(username);
+        List<UserNotification> unreadNotifications = userNotificationRepo.findByUser_UsernameAndIsDeletedFalseAndIsReadFalse(username);
         return unreadNotifications.stream()
                 .map(userNotification -> convertToDTO(userNotification.getNotification()))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<NotificationDTO> getRecentNotificationsForUser(String username) {

@@ -64,6 +64,11 @@ public class Trip {
     Boolean completed = false;
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    @JsonIgnore
      List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Review> reviews = new ArrayList<>();
 }
 

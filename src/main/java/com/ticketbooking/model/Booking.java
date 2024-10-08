@@ -9,10 +9,8 @@ import com.ticketbooking.model.enumType.PaymentStatus;
 import com.ticketbooking.utils.AppConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,64 +21,65 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+     Long id;
 
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "username")
-    private User user;
+     User user;
 
     @ManyToOne
     @JoinColumn(name = "trip_id")
-    private Trip trip;
+     Trip trip;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime bookingDateTime;
+     LocalDateTime bookingDateTime;
 
-    private String seatNumber;
+     String seatNumber;
 
     @Enumerated(EnumType.STRING)
-    private BookingType bookingType;
+     BookingType bookingType;
 
-    private String pickUpAddress;
+     String pickUpAddress;
 
-    private String custFirstName;
+     String custFirstName;
 
-    private String custLastName;
+     String custLastName;
 
     @Pattern(regexp = AppConstants.PHONE_REGEX_PATTERN, message = "Invalid phone")
-    private String phone;
+     String phone;
 
     @Pattern(regexp = AppConstants.EMAIL_REGEX_PATTERN, message = "Invalid email")
-    private String email;
+     String email;
 
-    private BigDecimal totalPayment;
+     BigDecimal totalPayment;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime paymentDateTime;
+     LocalDateTime paymentDateTime;
 
     @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod;
+     PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+     PaymentStatus paymentStatus;
 
     @OneToMany(mappedBy = "booking")
-    private List<PaymentHistory> paymentHistories;
+     List<PaymentHistory> paymentHistories;
 
 
     @Column(name = "points_earned", nullable = false, columnDefinition = "decimal(38,2) default 0")
-    private BigDecimal pointsEarned;
+     BigDecimal pointsEarned;
 
     @Column(name = "points_used", nullable = false, columnDefinition = "decimal(38,2) default 0")
-    private BigDecimal pointsUsed;
+     BigDecimal pointsUsed;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
-    private List<LoyaltyTransaction> loyaltyTransactions;
+     List<LoyaltyTransaction> loyaltyTransactions;
 
     // Phương thức áp dụng xu giảm giá
     public void applyLoyaltyPoints(BigDecimal points) {
@@ -95,4 +94,5 @@ public class Booking {
             ? this.totalPayment.multiply(rate)
             : BigDecimal.ZERO;
       }
+
 }

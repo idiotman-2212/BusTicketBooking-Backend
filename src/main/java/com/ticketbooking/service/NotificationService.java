@@ -20,8 +20,6 @@ public interface NotificationService {
 
     PageResponse<NotificationDTO> findAll(Integer page, Integer limit);
 
-    void sendTripCompletionNotification(Long tripId);
-
     void sendNotification(NotificationRequest request);
 
     List<NotificationDTO> getUnreadNotificationsForUser(String username);

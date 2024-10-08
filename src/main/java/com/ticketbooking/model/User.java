@@ -64,6 +64,10 @@ public class User implements UserDetails {
     @JsonIgnore
     List<LoyaltyTransaction> loyaltyTransactions;
 
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.ALL}, orphanRemoval = true)
+    @JsonIgnore
+    List<Review> reviews = new ArrayList<>();
+
     public void addLoyaltyPoints(BigDecimal points) {
         this.loyaltyPoints = this.loyaltyPoints.add(points);
     }

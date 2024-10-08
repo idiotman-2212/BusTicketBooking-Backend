@@ -23,7 +23,6 @@ public interface UserNotificationRepo extends JpaRepository<UserNotification, Lo
 
     List<UserNotification> findByUser_UsernameAndNotification_SendDateTimeAfter(String username, LocalDateTime date);
 
-    List<UserNotification> findByUser_UsernameAndIsReadFalse(String username);
 
     Optional<UserNotification> findByNotification_IdAndUser_Username(Long notificationId, String username);
 
@@ -41,4 +40,5 @@ public interface UserNotificationRepo extends JpaRepository<UserNotification, Lo
     @Query("SELECT un FROM UserNotification un WHERE un.user.username = :username AND un.isDeleted = false AND un.notification.sendDateTime >= :startDate")
     List<UserNotification> findRecentByUserAndNotDeleted(@Param("username") String username, @Param("startDate") LocalDateTime startDate);
 
+    List<UserNotification> findByUser_UsernameAndIsDeletedFalseAndIsReadFalse(String username);
 }

@@ -135,25 +135,25 @@ public class TripServiceImpl implements TripService {
                         + " đã hoàn thành. Bạn đã nhận được " + pointsEarned + " điểm xu vào tài khoản của mình. "
                         + "Chúng tôi hy vọng bạn đã có một chuyến đi tuyệt vời và mong sớm gặp lại bạn!";
 
-                sendNotificationToUser(user, title, message);
+                sendTripCompletionNotification(user, trip,pointsEarned, message);
+
             } else {
                 System.out.println("Booking " + booking.getId() + " is not eligible for points.");
             }
         }
     }
 
-    private void sendNotificationToUser(User user, String title, String message) {
-        // Tạo đối tượng Notification
+    private void sendTripCompletionNotification(User user, Trip trip, BigDecimal pointsEarned, String message) {
         Notification notification = new Notification();
-        notification.setTitle(title);
+        notification.setTitle("Hoàn thành chuyến đi");
         notification.setMessage(message);
         notification.setSendDateTime(LocalDateTime.now());
-        notification.setSender(null); // Hoặc bạn có thể đặt là hệ thống
         notification.setRecipientType(RecipientType.INDIVIDUAL);
         notification.setRecipientIdentifiers(user.getUsername());
+        notification.setTrip(trip);
+        notification.setSender(User.builder().username("system").build());
         notificationRepo.save(notification);
 
-        // Tạo UserNotification để liên kết thông báo với người dùng
         UserNotification userNotification = new UserNotification();
         userNotification.setNotification(notification);
         userNotification.setUser(user);

@@ -3,6 +3,7 @@ package com.ticketbooking.service;
 import com.ticketbooking.dto.BookingRequest;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Booking;
+import com.ticketbooking.model.Trip;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,6 +21,7 @@ public interface BookingService {
     PageResponse<Booking> findAll(Integer page, Integer limit);
 
     List<Booking> saveForRegisteredUser(BookingRequest bookingRequest);
+
     List<Booking> saveForWalkInCustomer(BookingRequest bookingRequest);
 
     Booking update(Booking booking);
@@ -27,5 +29,7 @@ public interface BookingService {
     String delete(Long id);
 
     List<Booking> getAllBookingFromTripAndDate(Long tripId);
+
     List<Booking> findBookingsByPhone(String phone);
+
 }

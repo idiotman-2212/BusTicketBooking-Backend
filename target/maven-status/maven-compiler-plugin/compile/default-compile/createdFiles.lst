@@ -4,13 +4,17 @@ com\ticketbooking\dto\AuthenticationResponse$AuthenticationResponseBuilder.class
 com\ticketbooking\controller\PaymentHistoryController.class
 com\ticketbooking\model\Role.class
 com\ticketbooking\controller\LoyaltyPointsController.class
+com\ticketbooking\model\Review$ReviewBuilder.class
 com\ticketbooking\dto\ForgotRequest.class
 com\ticketbooking\model\PaymentHistory$PaymentHistoryBuilder.class
 com\ticketbooking\dto\NotificationRequest$NotificationRequestBuilder.class
 com\ticketbooking\controller\CoachController.class
 com\ticketbooking\dto\AuthenticationRequest.class
 com\ticketbooking\repo\DiscountRepo.class
+com\ticketbooking\model\Review.class
+com\ticketbooking\service\impl\ReviewServiceImpl.class
 com\ticketbooking\service\TripService.class
+com\ticketbooking\controller\ReviewController.class
 com\ticketbooking\dto\ChangePwdRequest.class
 com\ticketbooking\exception\UnauthorizedException.class
 com\ticketbooking\model\Notification.class
@@ -22,6 +26,7 @@ com\ticketbooking\service\ReportService.class
 com\ticketbooking\dto\PermissionDto.class
 com\ticketbooking\exception\ResourceNotFoundException.class
 com\ticketbooking\model\User.class
+com\ticketbooking\dto\ReviewRequest.class
 com\ticketbooking\model\User$UserBuilder.class
 com\ticketbooking\model\enumType\PaymentStatus.class
 com\ticketbooking\model\LoyaltyTransaction$LoyaltyTransactionBuilder.class
@@ -59,6 +64,7 @@ com\ticketbooking\model\Driver.class
 com\ticketbooking\model\Trip$TripBuilder.class
 com\ticketbooking\model\Booking$BookingBuilder.class
 com\ticketbooking\exception\ApiErrorResponse$ApiErrorResponseBuilder.class
+com\ticketbooking\repo\ReviewRepo.class
 com\ticketbooking\model\UserNotification$UserNotificationBuilder.class
 com\ticketbooking\exception\ObjectNotValidException.class
 com\ticketbooking\dto\ChangePwdRequest$ChangePwdRequestBuilder.class
@@ -104,6 +110,7 @@ com\ticketbooking\dto\WeekRevenueDto.class
 com\ticketbooking\model\enumType\CoachType.class
 com\ticketbooking\repo\PaymentHistoryRepo.class
 com\ticketbooking\service\MailService.class
+com\ticketbooking\service\ReviewService.class
 com\ticketbooking\dto\ScreenPermissionDto.class
 com\ticketbooking\model\Driver$DriverBuilder.class
 com\ticketbooking\service\NotificationService.class
@@ -126,6 +133,7 @@ com\ticketbooking\service\impl\DiscountServiceImpl$DiscountService.class
 com\ticketbooking\validator\ObjectValidator.class
 com\ticketbooking\controller\BookingController.class
 com\ticketbooking\model\Coach$CoachBuilder.class
+com\ticketbooking\dto\ReviewRequest$ReviewRequestBuilder.class
 com\ticketbooking\model\Discount$DiscountBuilder.class
 com\ticketbooking\service\impl\NotificationServiceImpl.class
 com\ticketbooking\service\impl\ProvinceServiceImpl.class

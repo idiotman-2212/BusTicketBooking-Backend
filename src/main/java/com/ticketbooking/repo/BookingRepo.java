@@ -30,4 +30,5 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     List<Booking> findByPhone(String phone);
 
     List<Booking> findByTrip(Trip trip);
+
 }
