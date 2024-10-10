@@ -4,6 +4,7 @@ import com.ticketbooking.dto.BookingRequest;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Booking;
 import com.ticketbooking.model.Trip;
+import com.ticketbooking.model.enumType.PaymentStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,5 +32,4 @@ public interface BookingService {
     List<Booking> getAllBookingFromTripAndDate(Long tripId);
 
     List<Booking> findBookingsByPhone(String phone);
-
 }

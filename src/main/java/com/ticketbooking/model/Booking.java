@@ -75,24 +75,10 @@ public class Booking {
     @Column(name = "points_earned", nullable = false, columnDefinition = "decimal(38,2) default 0")
      BigDecimal pointsEarned;
 
-    @Column(name = "points_used", nullable = false, columnDefinition = "decimal(38,2) default 0")
+    @Column(name = "points_used", columnDefinition = "decimal(38,2) default 0")
      BigDecimal pointsUsed;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
      List<LoyaltyTransaction> loyaltyTransactions;
-
-    // Phương thức áp dụng xu giảm giá
-    public void applyLoyaltyPoints(BigDecimal points) {
-        if (points.compareTo(BigDecimal.ZERO) > 0) {
-            this.pointsUsed = points;
-            this.totalPayment = this.totalPayment.subtract(points);
-        }
-    }
-    // Phương thức tính toán số xu tích lũy
-     public void calculateEarnedPoints(BigDecimal rate) {
-          this.pointsEarned = (this.totalPayment != null && rate != null)
-            ? this.totalPayment.multiply(rate)
-            : BigDecimal.ZERO;
-      }
 
 }

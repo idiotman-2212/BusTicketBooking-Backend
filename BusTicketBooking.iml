@@ -185,7 +185,6 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2" level="project" />
     <orderEntry type="library" name="Maven: org.webjars:swagger-ui:5.2.0" level="project" />
     <orderEntry type="library" name="Maven: com.twilio.sdk:twilio:8.31.1" level="project" />
-    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.15" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.7" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.5.13" level="project" />
     <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.2" level="project" />
@@ -200,5 +199,6 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-messaging:6.0.10" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-websocket:6.0.10" level="project" />
     <orderEntry type="library" name="Maven: com.vaadin.external.google:android-json:0.0.20131108.vaadin1" level="project" />
+    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.15" level="project" />
   </component>
 </module>

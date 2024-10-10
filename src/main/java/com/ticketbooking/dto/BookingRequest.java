@@ -46,6 +46,6 @@ public class BookingRequest {
 
     private PaymentStatus paymentStatus;
 
-    private BigDecimal pointsToUse; // <-- Thêm trường này để nhận số điểm người dùng muốn sử dụng
+    private BigDecimal pointsUsed;
 
 }

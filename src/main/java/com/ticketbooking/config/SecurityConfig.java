@@ -111,7 +111,8 @@ public class SecurityConfig {
                                 "/api/v1/provinces/**",
                                 "/api/v1/bookings/**",
                                 "/api/v1/trips/**",
-                                "/api/v1/language/**"
+                                "/api/v1/language/**",
+                                "/api/v1/vnpay/**"
                         ).permitAll() // Public API endpoints
                         .requestMatchers("/api/v1/notifications/**").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Swagger and API documentation
