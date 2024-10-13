@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,28 +16,29 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class Discount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+     Long id;
 
     @Column(unique = true)
-    private String code;
+     String code;
 
     @Min(value = 0, message = "Discount amount must be >= 0")
-    private BigDecimal amount;
+     BigDecimal amount;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime startDateTime;
+     LocalDateTime startDateTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime endDateTime;
+     LocalDateTime endDateTime;
 
-    private String description;
+     String description;
 
     @OneToMany(mappedBy = "discount")
     @JsonIgnore
-    private List<Trip> trips;
+     List<Trip> trips;
 
 }

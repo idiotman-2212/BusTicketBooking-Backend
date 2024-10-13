@@ -3,9 +3,8 @@ package com.ticketbooking.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ticketbooking.model.enumType.RoleCode;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
@@ -13,21 +12,23 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+     Long id;
 
     @Enumerated(EnumType.STRING)
-    private RoleCode roleCode;
+     RoleCode roleCode;
 
-    private String roleName;
+     String roleName;
 
-    private String description;
+     String description;
 
     @OneToMany(mappedBy = "role")
     @JsonIgnore
-    private List<UserPermission> permissions;
+     List<UserPermission> permissions;
 
 }

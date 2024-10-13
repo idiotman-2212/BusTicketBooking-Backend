@@ -4,7 +4,9 @@ com\ticketbooking\dto\AuthenticationResponse$AuthenticationResponseBuilder.class
 com\ticketbooking\controller\PaymentHistoryController.class
 com\ticketbooking\model\Role.class
 com\ticketbooking\controller\LoyaltyPointsController.class
+com\ticketbooking\model\BookingCargo$BookingCargoBuilder.class
 com\ticketbooking\model\Review$ReviewBuilder.class
+com\ticketbooking\model\BookingCargo.class
 com\ticketbooking\dto\ForgotRequest.class
 com\ticketbooking\model\PaymentHistory$PaymentHistoryBuilder.class
 com\ticketbooking\dto\NotificationRequest$NotificationRequestBuilder.class
@@ -21,7 +23,9 @@ com\ticketbooking\model\Notification.class
 com\ticketbooking\repo\UserNotificationRepo.class
 com\ticketbooking\service\impl\AuthenticationServiceImpl.class
 com\ticketbooking\dto\PageResponse.class
+com\ticketbooking\model\enumType\TransactionType.class
 com\ticketbooking\model\Token$TokenBuilder.class
+com\ticketbooking\model\Province$ProvinceBuilder.class
 com\ticketbooking\service\ReportService.class
 com\ticketbooking\dto\PermissionDto.class
 com\ticketbooking\exception\ResourceNotFoundException.class
@@ -34,6 +38,7 @@ com\ticketbooking\dto\NotificationRequest.class
 com\ticketbooking\service\impl\LoyaltyPointsServiceImpl.class
 com\ticketbooking\utils\DateTimeUtils.class
 com\ticketbooking\service\UserPermissionService.class
+com\ticketbooking\service\CargoService.class
 com\ticketbooking\service\LoyaltyPointsService.class
 com\ticketbooking\service\CoachService.class
 com\ticketbooking\dto\RegisterRequest$RegisterRequestBuilder.class
@@ -46,9 +51,11 @@ com\ticketbooking\exception\ExistingResourceException.class
 com\ticketbooking\exception\InvalidInputException.class
 com\ticketbooking\model\enumType\BookingType.class
 com\ticketbooking\model\enumType\RoleCode.class
+com\ticketbooking\model\Role$RoleBuilder.class
 com\ticketbooking\repo\ProvinceRepo.class
 com\ticketbooking\dto\ScreenPermissionDto$ScreenPermissionDtoBuilder.class
 com\ticketbooking\service\RoleService.class
+com\ticketbooking\controller\CargoController.class
 com\ticketbooking\service\impl\DiscountServiceImpl.class
 com\ticketbooking\repo\LoyaltyTransactionRepo.class
 com\ticketbooking\config\WebSocketConfig.class
@@ -57,9 +64,11 @@ com\ticketbooking\repo\TokenRepo.class
 com\ticketbooking\controller\TripController.class
 com\ticketbooking\service\DiscountService.class
 com\ticketbooking\dto\EmailMessage$EmailMessageBuilder.class
+com\ticketbooking\repo\BookingCargoRepo.class
 com\ticketbooking\controller\ProvinceController.class
 com\ticketbooking\config\swagger\OpenApiConfig.class
 com\ticketbooking\repo\ReportRepo.class
+com\ticketbooking\model\Cargo$CargoBuilder.class
 com\ticketbooking\model\Driver.class
 com\ticketbooking\model\Trip$TripBuilder.class
 com\ticketbooking\model\Booking$BookingBuilder.class
@@ -88,12 +97,15 @@ com\ticketbooking\exception\ApiErrorResponse.class
 com\ticketbooking\service\UserService.class
 com\ticketbooking\dto\RegisterRequest.class
 com\ticketbooking\repo\RoleRepo.class
+com\ticketbooking\model\Cargo.class
 com\ticketbooking\model\Province.class
 com\ticketbooking\jwt\JwtService.class
 com\ticketbooking\service\impl\BookingServiceImpl.class
 com\ticketbooking\dto\NotificationDTO$NotificationDTOBuilder.class
+com\ticketbooking\service\impl\CargoServiceImpl.class
 com\ticketbooking\repo\UserPermissionRepo.class
 com\ticketbooking\dto\CoachUsageDto.class
+com\ticketbooking\repo\CargoRepo.class
 com\ticketbooking\repo\CoachRepo.class
 com\ticketbooking\jwt\JwtAuthFilter.class
 com\ticketbooking\service\impl\PaymentHistoryServiceImpl.class
@@ -102,7 +114,6 @@ com\ticketbooking\config\SecurityConfig$1.class
 com\ticketbooking\dto\TopRouteDto.class
 com\ticketbooking\model\enumType\TokenType.class
 com\ticketbooking\service\impl\CoachServiceImpl.class
-com\ticketbooking\model\LoyaltyTransaction$TransactionType.class
 com\ticketbooking\model\Token.class
 com\ticketbooking\dto\LoyaltyTransactionDTO.class
 com\ticketbooking\repo\UtilRepo.class
@@ -127,6 +138,7 @@ com\ticketbooking\dto\AuthenticationResponse.class
 com\ticketbooking\service\LogoutService.class
 com\ticketbooking\model\Notification$NotificationBuilder.class
 com\ticketbooking\controller\AuthenticationController.class
+com\ticketbooking\dto\BookingRequest$BookingRequestBuilder.class
 com\ticketbooking\dto\BookingRequest.class
 com\ticketbooking\dto\NotificationDTO.class
 com\ticketbooking\service\impl\DiscountServiceImpl$DiscountService.class

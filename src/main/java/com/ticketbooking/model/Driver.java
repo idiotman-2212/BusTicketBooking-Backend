@@ -2,56 +2,57 @@ package com.ticketbooking.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.ticketbooking.utils.AppConstants;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class Driver {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+     Long id;
 
-    private String firstName;
+     String firstName;
 
-    private String lastName;
+     String lastName;
 
     @Column(unique = true)
     @Email(regexp = AppConstants.EMAIL_REGEX_PATTERN, message = "Invalid email")
-    private String email;
+     String email;
 
     @Column(unique = true)
     @Pattern(regexp = AppConstants.PHONE_REGEX_PATTERN, message = "Invalid phone")
-    private String phone;
+     String phone;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private LocalDate dob;
+     LocalDate dob;
 
-    private Boolean gender;
+     Boolean gender;
 
-    private String address;
+     String address;
 
     @Column(unique = true)
-    private String licenseNumber;
+     String licenseNumber;
 
-    private Boolean quit;
+     Boolean quit;
 
     @OneToMany(mappedBy = "driver")
     @JsonIgnore
-    private List<Trip> trips;
+     List<Trip> trips;
 
     public String getFullName() {
         return this.getFirstName().concat(" ").concat(this.getLastName());

@@ -11,6 +11,7 @@ import com.ticketbooking.repo.TripRepo;
 import com.ticketbooking.repo.UserRepo;
 import com.ticketbooking.service.ReviewService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepo userRepo;
 
     @Override
+    @CacheEvict(cacheNames = {"reviews", "reviews_paging"}, allEntries = true)
     public Review createReview(ReviewRequest reviewRequest) {
         String username = reviewRequest.getUsername();
         User user = userRepo.findByUsername(username).orElseThrow(()-> new ResourceNotFoundException("Not found user"));

@@ -1,5 +1,6 @@
 package com.ticketbooking.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -13,7 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -27,45 +29,45 @@ public class Trip {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     Long id;
+    Long id;
 
     @ManyToOne
     @JoinColumn(name = "driver_id")
-     Driver driver;
+    Driver driver;
 
     @ManyToOne
     @JoinColumn(name = "coach_id")
-     Coach coach;
+    Coach coach;
 
     @ManyToOne
     @JoinColumn(name = "source_id")
-     Province source;
+    Province source;
 
     @ManyToOne
     @JoinColumn(name = "dest_id")
-     Province destination;
+    Province destination;
 
     @ManyToOne
     @JoinColumn(name = "discount_id")
-     Discount discount;
+    Discount discount;
 
     @Min(value = 0, message = "Price should be positive")
-     BigDecimal price;
+    BigDecimal price;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-     LocalDateTime departureDateTime;
+    LocalDateTime departureDateTime;
 
     Double duration;
 
     @OneToMany(mappedBy = "trip")
     @JsonIgnore
-     List<Booking> bookings;
+    List<Booking> bookings;
 
     Boolean completed = false;
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
     @JsonIgnore
-     List<Notification> notifications = new ArrayList<>();
+    List<Notification> notifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
     @JsonIgnore

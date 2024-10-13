@@ -2,32 +2,31 @@ package com.ticketbooking.model;
 
 import com.ticketbooking.model.enumType.TokenType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class Token {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+     Long id;
 
-    private String token;
+     String token;
 
     @Enumerated(EnumType.STRING)
-    private TokenType tokenType;
+     TokenType tokenType;
 
-    private boolean expired;
+     boolean expired;
 
-    private boolean revoked;
+     boolean revoked;
 
     @ManyToOne
     @JoinColumn(name = "username")
-    private User user;
+     User user;
 }

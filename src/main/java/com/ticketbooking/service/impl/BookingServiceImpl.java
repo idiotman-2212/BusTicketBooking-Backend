@@ -1,16 +1,16 @@
 package com.ticketbooking.service.impl;
 
 import com.ticketbooking.dto.BookingRequest;
-import com.ticketbooking.dto.EmailMessage;
+import com.ticketbooking.dto.CargoRequest;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.exception.ResourceNotFoundException;
 import com.ticketbooking.model.*;
 import com.ticketbooking.model.enumType.PaymentStatus;
-import com.ticketbooking.repo.BookingRepo;
-import com.ticketbooking.repo.LoyaltyTransactionRepo;
-import com.ticketbooking.repo.PaymentHistoryRepo;
-import com.ticketbooking.repo.UserRepo;
-import com.ticketbooking.service.*;
+import com.ticketbooking.model.enumType.TransactionType;
+import com.ticketbooking.repo.*;
+import com.ticketbooking.service.BookingService;
+import com.ticketbooking.service.NotificationService;
+import com.ticketbooking.service.SmsService;
 import com.ticketbooking.validator.ObjectValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,31 +22,26 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepo bookingRepo;
-
     private final PaymentHistoryRepo paymentHistoryRepo;
-
     private final ObjectValidator<Booking> objectValidator;
-
     private final UserRepo userRepo;
     private final LoyaltyTransactionRepo loyaltyTransactionRepo;
-
     private final SmsService smsService;
-
     private final NotificationService notificationService;
+    private final CargoRepo cargoRepo;
+    private final BookingCargoRepo bookingCargoRepo;
+
 
     @Override
     @Cacheable(cacheNames = {"bookings"}, key = "#phone")
@@ -62,6 +57,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public Booking findById(Long id) {
         return bookingRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found Booking<%d>".formatted(id)));
@@ -90,24 +86,17 @@ public class BookingServiceImpl implements BookingService {
     @CacheEvict(cacheNames = {"bookings", "bookings_paging"}, allEntries = true)
     public List<Booking> saveForRegisteredUser(BookingRequest bookingRequest) {
         String[] selectSeats = bookingRequest.getSeatNumber();
-        BigDecimal originalTotalPayment = bookingRequest.getTotalPayment();  // Đã trừ điểm xu từ frontend
+        BigDecimal originalTotalPayment = bookingRequest.getTotalPayment();
         BigDecimal pointsUsed = bookingRequest.getPointsUsed();
 
-        System.out.println("Giá trị tổng tiền đã nhận từ frontend: " + originalTotalPayment);
-        System.out.println("Điểm xu đã sử dụng (từ frontend): " + pointsUsed);
-
-        // Lấy thông tin người dùng để xử lý điểm thưởng
         User user = userRepo.findByUsername(bookingRequest.getUser().getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Không cần trừ điểm xu nữa vì frontend đã làm
         BigDecimal totalPaymentPerSeat = originalTotalPayment.divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP);
-        System.out.println("Tổng tiền mỗi ghế: " + totalPaymentPerSeat);
 
         List<Booking> orderedBookings = new ArrayList<>();
         for (String seat : selectSeats) {
-            orderedBookings.add(Booking
-                    .builder()
+            Booking booking = Booking.builder()
                     .user(user)
                     .trip(bookingRequest.getTrip())
                     .bookingDateTime(bookingRequest.getBookingDateTime())
@@ -123,10 +112,33 @@ public class BookingServiceImpl implements BookingService {
                     .paymentMethod(bookingRequest.getPaymentMethod())
                     .paymentStatus(bookingRequest.getPaymentStatus())
                     .pointsEarned(BigDecimal.ZERO)
-                    .pointsUsed(pointsUsed.divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP))  // Điểm xu chia đều cho mỗi ghế
-                    .build());
+                    .pointsUsed(pointsUsed.divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP))
+                    .build();
+
+            // Thêm BookingCargo vào Booking trước khi lưu
+            List<BookingCargo> bookingCargos = new ArrayList<>();
+            BigDecimal totalCargoPrice = BigDecimal.ZERO;
+            for (CargoRequest cargoRequest : bookingRequest.getCargoRequests()) {
+                Cargo cargo = cargoRepo.findById(cargoRequest.getCargoId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Cargo not found"));
+                BigDecimal cargoPrice = cargo.getBasePrice().multiply(new BigDecimal(cargoRequest.getQuantity()));
+                totalCargoPrice = totalCargoPrice.add(cargoPrice);
+
+                BookingCargo bookingCargo = BookingCargo.builder()
+                        .booking(booking)
+                        .cargo(cargo)
+                        .quantity(cargoRequest.getQuantity())
+                        .price(cargoPrice)
+                        .build();
+                bookingCargos.add(bookingCargo);
+            }
+            booking.setBookingCargos(bookingCargos);
+            booking.setTotalPayment(booking.getTotalPayment().add(totalCargoPrice));
+            orderedBookings.add(booking);
         }
+
         var savedBookings = bookingRepo.saveAll(orderedBookings);
+        bookingRepo.flush(); // Lưu ngay lập tức để đảm bảo dữ liệu được lưu vào cơ sở dữ liệu
 
         // Xử lý điểm thưởng cho người dùng
         if (pointsUsed.compareTo(BigDecimal.ZERO) > 0) {
@@ -136,18 +148,23 @@ public class BookingServiceImpl implements BookingService {
             // Lưu lịch sử giao dịch điểm sử dụng
             LoyaltyTransaction useTransaction = LoyaltyTransaction.builder()
                     .user(user)
-                    .booking(savedBookings.get(0)) // Chọn booking đầu tiên để liên kết
-                    .amount(pointsUsed.negate()) // giá trị âm cho điểm sử dụng
+                    .booking(savedBookings.get(0))
+                    .amount(pointsUsed.negate())
                     .transactionDate(LocalDateTime.now())
-                    .transactionType(LoyaltyTransaction.TransactionType.USE)
+                    .transactionType(TransactionType.USE)
                     .build();
             loyaltyTransactionRepo.save(useTransaction);
         }
 
+        // Nạp lại Booking từ cơ sở dữ liệu để đảm bảo `bookingCargos` đã được nạp đầy đủ
+        List<Booking> updatedBookings = savedBookings.stream()
+                .map(booking -> bookingRepo.findById(booking.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Booking not found")))
+                .collect(Collectors.toList());
+
         // Xử lý tích điểm sau khi chuyến đi hoàn thành
-        for (Booking savedBooking : savedBookings) {
-            System.out.println("Booking ID: " + savedBooking.getId() + ", Total Payment: " + savedBooking.getTotalPayment() + ", Points Used: " + savedBooking.getPointsUsed());
-            if (bookingRequest.getTrip().getCompleted()) {
+        if (bookingRequest.getTrip().getCompleted()) {
+            for (Booking savedBooking : updatedBookings) {
                 BigDecimal pointsEarned = savedBooking.getTotalPayment().multiply(new BigDecimal("0.01")).setScale(0, RoundingMode.DOWN);
                 savedBooking.setPointsEarned(pointsEarned);
                 user.addLoyaltyPoints(pointsEarned);
@@ -158,77 +175,12 @@ public class BookingServiceImpl implements BookingService {
                         .booking(savedBooking)
                         .amount(pointsEarned)
                         .transactionDate(LocalDateTime.now())
-                        .transactionType(LoyaltyTransaction.TransactionType.EARN)
+                        .transactionType(TransactionType.EARN)
                         .build();
                 loyaltyTransactionRepo.save(earnTransaction);
             }
         }
         userRepo.save(user);
-/*
-        // Gửi SMS xác nhận vé đặt thành công
-        String source = bookingRequest.getTrip().getSource().getName();// Ví dụ thông tin chuyến đi
-        String destination = bookingRequest.getTrip().getDestination().getName();
-        String busInfo = bookingRequest.getTrip().getCoach().getName(); // Ví dụ thông tin xe
-        String departureTime = bookingRequest.getTrip().getDepartureDateTime().toString(); // Ngày giờ đi
-        String seatNumbers = String.join(", ", bookingRequest.getSeatNumber());  // Danh sách ghế
-        //BigDecimal totalPayment = bookingRequest.getTotalPayment();  // Tổng giá vé
-
-        // Gọi service để gửi SMS và email
-        notificationService.sendSmsConfirmation(
-                bookingRequest.getPhone(), source, destination, busInfo, departureTime, seatNumbers, totalPaymentPerSeat
-        );
-        notificationService.sendEmailConfirmation(
-                bookingRequest.getEmail(), source, destination, busInfo, departureTime, seatNumbers, totalPaymentPerSeat
-        );
-*/
-
-        System.out.println("User: " + user.getUsername() + ", Loyalty Points after deduction: " + user.getLoyaltyPoints());
-
-        return savedBookings;
-    }
-
-
-    //đặt vé site2 khách vãng lai
-    @Override
-    @Transactional
-    @CacheEvict(cacheNames = {"bookings", "bookings_paging"}, allEntries = true)
-    public List<Booking> saveForWalkInCustomer(BookingRequest bookingRequest) {
-        String[] selectSeats = bookingRequest.getSeatNumber();
-        BigDecimal totalPaymentPerSeat = bookingRequest.getTotalPayment().divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP);
-
-        List<Booking> orderedBookings = new ArrayList<>();
-
-        for (String seat : selectSeats) {
-            Booking booking = Booking.builder()
-                    .trip(bookingRequest.getTrip())
-                    .bookingDateTime(bookingRequest.getBookingDateTime())
-                    .seatNumber(seat)
-                    .custFirstName(bookingRequest.getFirstName())
-                    .custLastName(bookingRequest.getLastName())
-                    .phone(bookingRequest.getPhone())
-                    .email(bookingRequest.getEmail())
-                    .totalPayment(totalPaymentPerSeat)
-                    .paymentDateTime(LocalDateTime.now())
-                    .paymentMethod(bookingRequest.getPaymentMethod())
-                    .paymentStatus(bookingRequest.getPaymentStatus())
-                    .pointsEarned(BigDecimal.ZERO) // Không tích lũy điểm cho khách vãng lai
-                    .pointsUsed(BigDecimal.ZERO) // Không sử dụng điểm cho khách vãng lai
-                    .build();
-
-            orderedBookings.add(booking);
-        }
-        var savedBookings = bookingRepo.saveAll(orderedBookings);
-        List<PaymentHistory> paymentHistories = new ArrayList<>();
-        for (Booking savedBooking : savedBookings) {
-            paymentHistories.add(PaymentHistory
-                    .builder()
-                    .booking(savedBooking)
-                    .oldStatus(null)
-                    .newStatus(savedBooking.getPaymentStatus())
-                    .statusChangeDateTime(savedBooking.getPaymentDateTime())
-                    .build());
-        }
-        paymentHistoryRepo.saveAll(paymentHistories);
 
         /*
         // Gửi SMS xác nhận vé đặt thành công
@@ -247,23 +199,94 @@ public class BookingServiceImpl implements BookingService {
                 bookingRequest.getEmail(), source, destination, busInfo, departureTime, seatNumbers, totalPaymentPerSeat
         );
 */
-
-        // Lưu booking
-        return savedBookings;
-    }
-
-    private BigDecimal calculatePointsEarned(BigDecimal totalPayment) {
-        // Logic to earn 0.5% of total payment as points
-        BigDecimal pointsRate = new BigDecimal("0.01"); // 1%
-        return totalPayment.multiply(pointsRate).setScale(0, RoundingMode.DOWN);
+        return updatedBookings;
     }
 
 
-    private BigDecimal applyPoints(BigDecimal totalPayment, BigDecimal pointsToUse, User user) {
-        if (pointsToUse != null && user.hasEnoughPoints(pointsToUse)) {
-            return totalPayment.subtract(pointsToUse);
+
+    //đặt vé site2 khách vãng lai
+    @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"bookings", "bookings_paging"}, allEntries = true)
+    public List<Booking> saveForWalkInCustomer(BookingRequest bookingRequest) {
+        String[] selectSeats = bookingRequest.getSeatNumber();
+        BigDecimal totalPaymentPerSeat = bookingRequest.getTotalPayment()
+                .divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP);
+
+        List<Booking> orderedBookings = new ArrayList<>();
+        for (String seat : selectSeats) {
+            Booking booking = Booking.builder()
+                    .trip(bookingRequest.getTrip())
+                    .bookingDateTime(bookingRequest.getBookingDateTime())
+                    .seatNumber(seat)
+                    .bookingType(bookingRequest.getBookingType())
+                    .custFirstName(bookingRequest.getFirstName())
+                    .custLastName(bookingRequest.getLastName())
+                    .phone(bookingRequest.getPhone())
+                    .email(bookingRequest.getEmail())
+                    .pickUpAddress(bookingRequest.getPickUpAddress())
+                    .totalPayment(totalPaymentPerSeat)
+                    .paymentDateTime(LocalDateTime.now())
+                    .paymentMethod(bookingRequest.getPaymentMethod())
+                    .paymentStatus(bookingRequest.getPaymentStatus())
+                    .pointsEarned(BigDecimal.ZERO)
+                    .pointsUsed(BigDecimal.ZERO)
+                    .build();
+
+            // Thêm BookingCargo vào Booking trước khi lưu
+            BigDecimal totalCargoPrice = BigDecimal.ZERO;
+            List<BookingCargo> bookingCargos = new ArrayList<>();
+
+            // Kiểm tra xem cargoRequests có khác null không
+            if (bookingRequest.getCargoRequests() != null) {
+                for (CargoRequest cargoRequest : bookingRequest.getCargoRequests()) {
+                    Cargo cargo = cargoRepo.findById(cargoRequest.getCargoId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Cargo not found"));
+                    BigDecimal cargoPrice = cargo.getBasePrice().multiply(new BigDecimal(cargoRequest.getQuantity()));
+                    totalCargoPrice = totalCargoPrice.add(cargoPrice);
+
+                    BookingCargo bookingCargo = BookingCargo.builder()
+                            .booking(booking)
+                            .cargo(cargo)
+                            .quantity(cargoRequest.getQuantity())
+                            .price(cargoPrice)
+                            .build();
+                    bookingCargos.add(bookingCargo);
+                }
+            }
+
+            booking.setBookingCargos(bookingCargos);
+            booking.setTotalPayment(booking.getTotalPayment().add(totalCargoPrice));
+            orderedBookings.add(booking);
         }
-        return totalPayment;
+
+        // Lưu các Booking với BookingCargo đi kèm ngay lập tức
+        var savedBookings = bookingRepo.saveAll(orderedBookings);
+        bookingRepo.flush(); // Đẩy dữ liệu ngay lập tức vào cơ sở dữ liệu
+
+        // Nạp lại Booking từ database để đảm bảo tất cả BookingCargo đã được nạp đầy đủ
+        List<Booking> updatedBookings = savedBookings.stream()
+                .map(booking -> bookingRepo.findById(booking.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Booking not found")))
+                .collect(Collectors.toList());
+
+        // Lưu lịch sử thanh toán
+        List<PaymentHistory> paymentHistories = new ArrayList<>();
+        for (Booking savedBooking : updatedBookings) {
+            paymentHistories.add(PaymentHistory
+                    .builder()
+                    .booking(savedBooking)
+                    .oldStatus(null)
+                    .newStatus(savedBooking.getPaymentStatus())
+                    .statusChangeDateTime(savedBooking.getPaymentDateTime())
+                    .build());
+        }
+        paymentHistoryRepo.saveAll(paymentHistories);
+
+        System.out.println("Booking Request: " + bookingRequest);
+        System.out.println("Cargo Requests: " + bookingRequest.getCargoRequests());
+
+        return updatedBookings;
     }
 
 

@@ -7,6 +7,7 @@ import com.ticketbooking.exception.ResourceNotFoundException;
 import com.ticketbooking.model.*;
 import com.ticketbooking.model.enumType.PaymentStatus;
 import com.ticketbooking.model.enumType.RecipientType;
+import com.ticketbooking.model.enumType.TransactionType;
 import com.ticketbooking.repo.*;
 import com.ticketbooking.service.TripService;
 import jakarta.transaction.Transactional;
@@ -120,7 +121,7 @@ public class TripServiceImpl implements TripService {
                         .booking(booking)
                         .amount(pointsEarned)
                         .transactionDate(LocalDateTime.now())
-                        .transactionType(LoyaltyTransaction.TransactionType.EARN)
+                        .transactionType(TransactionType.EARN)
                         .build();
 
 

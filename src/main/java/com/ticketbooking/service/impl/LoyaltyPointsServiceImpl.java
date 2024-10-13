@@ -7,6 +7,7 @@ import com.ticketbooking.model.Booking;
 import com.ticketbooking.model.LoyaltyTransaction;
 import com.ticketbooking.model.Trip;
 import com.ticketbooking.model.User;
+import com.ticketbooking.model.enumType.TransactionType;
 import com.ticketbooking.repo.BookingRepo;
 import com.ticketbooking.repo.LoyaltyTransactionRepo;
 import com.ticketbooking.repo.UserRepo;
@@ -63,7 +64,7 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
         transaction.setBooking(booking);
         transaction.setAmount(pointsEarned);
         transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setTransactionType(LoyaltyTransaction.TransactionType.EARN);
+        transaction.setTransactionType(TransactionType.EARN);
         loyaltyTransactionRepo.save(transaction);
 
         // Cộng điểm cho người dùng
@@ -104,7 +105,7 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
         transaction.setBooking(booking);
         transaction.setAmount(pointsToUse.negate());
         transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setTransactionType(LoyaltyTransaction.TransactionType.USE);
+        transaction.setTransactionType(TransactionType.USE);
         loyaltyTransactionRepo.save(transaction);
 
         userRepo.deductLoyaltyPoints(user.getUsername(), pointsToUse);

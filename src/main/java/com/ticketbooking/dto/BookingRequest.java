@@ -1,51 +1,85 @@
 package com.ticketbooking.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.ticketbooking.model.Cargo;
 import com.ticketbooking.model.Trip;
 import com.ticketbooking.model.User;
 import com.ticketbooking.model.enumType.BookingType;
 import com.ticketbooking.model.enumType.PaymentMethod;
 import com.ticketbooking.model.enumType.PaymentStatus;
-import lombok.Data;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class BookingRequest {
 
-    private Long id;
+     Long id;
 
-    private User user;
+     User user;
 
-    private Trip trip;
+     Trip trip;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-    private LocalDateTime bookingDateTime;
+     LocalDateTime bookingDateTime;
 
-    private String[] seatNumber;
+     String[] seatNumber;
 
-    private BookingType bookingType;
+     BookingType bookingType;
 
-    private String pickUpAddress;
+     String pickUpAddress;
 
-    private String firstName;
+     String firstName;
 
-    private String lastName;
+     String lastName;
 
-    private String phone;
+     String phone;
 
-    private String email;
+     String email;
 
-    private BigDecimal totalPayment;
+     BigDecimal totalPayment;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime paymentDateTime;
+     LocalDateTime paymentDateTime;
 
-    private PaymentMethod paymentMethod;
+     PaymentMethod paymentMethod;
 
-    private PaymentStatus paymentStatus;
+     PaymentStatus paymentStatus;
 
-    private BigDecimal pointsUsed;
+     BigDecimal pointsUsed;
 
+    List<CargoRequest> cargoRequests = new ArrayList<>();
+
+    @Override
+    public String toString() {
+        return "BookingRequest{" +
+                "id=" + id +
+                ", user=" + user +
+                ", trip=" + trip +
+                ", bookingDateTime=" + bookingDateTime +
+                ", seatNumber=" + Arrays.toString(seatNumber) +
+                ", bookingType=" + bookingType +
+                ", pickUpAddress='" + pickUpAddress + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", phone='" + phone + '\'' +
+                ", email='" + email + '\'' +
+                ", totalPayment=" + totalPayment +
+                ", paymentDateTime=" + paymentDateTime +
+                ", paymentMethod=" + paymentMethod +
+                ", paymentStatus=" + paymentStatus +
+                ", pointsUsed=" + pointsUsed +
+                ", cargoRequests=" + cargoRequests +
+                '}';
+    }
 }

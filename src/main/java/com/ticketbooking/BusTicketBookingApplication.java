@@ -69,12 +69,12 @@ public class BusTicketBookingApplication implements CommandLineRunner {
             users.add(
                     User.builder().username("user" + i).password(passwordEncoder.encode("123456")).firstName("Mr").lastName("User " + i)
                             .email("user" + i + "@gmail.com").dob(LocalDate.of(2002, 1, 1))
-                            .gender(false).address("blabla").active(true).build()
+                            .gender(false).address("blabla").active(true).loyaltyPoints(BigDecimal.valueOf(0)).build()
             );
         }
-        users.add(User.builder().username("admin").password(passwordEncoder.encode("123456")).firstName("Diễn").lastName("Châu")
+        users.add(User.builder().username("admin").password(passwordEncoder.encode("123456")).firstName("Admin").lastName("Admin")
                 .email("dienchau45@gmail.com").phone("0326917158").dob(LocalDate.of(2002, 2, 22))
-                .gender(true).address("blabla").active(true).build());
+                .gender(true).address("blabla").active(true).loyaltyPoints(BigDecimal.valueOf(0)).build());
         userRepo.saveAll(users);
     }
 

@@ -2,7 +2,8 @@ package com.ticketbooking.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.ticketbooking.model.enumType.BookingType;
 import com.ticketbooking.model.enumType.PaymentMethod;
 import com.ticketbooking.model.enumType.PaymentStatus;
@@ -17,7 +18,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,59 +28,63 @@ public class Booking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     Long id;
+    Long id;
 
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "username")
-     User user;
+    User user;
 
     @ManyToOne
     @JoinColumn(name = "trip_id")
-     Trip trip;
+    Trip trip;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-     LocalDateTime bookingDateTime;
+    LocalDateTime bookingDateTime;
 
-     String seatNumber;
+    String seatNumber;
 
     @Enumerated(EnumType.STRING)
-     BookingType bookingType;
+    BookingType bookingType;
 
-     String pickUpAddress;
+    String pickUpAddress;
 
-     String custFirstName;
+    String custFirstName;
 
-     String custLastName;
+    String custLastName;
 
     @Pattern(regexp = AppConstants.PHONE_REGEX_PATTERN, message = "Invalid phone")
-     String phone;
+    String phone;
 
     @Pattern(regexp = AppConstants.EMAIL_REGEX_PATTERN, message = "Invalid email")
-     String email;
+    String email;
 
-     BigDecimal totalPayment;
+    BigDecimal totalPayment;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-     LocalDateTime paymentDateTime;
+    LocalDateTime paymentDateTime;
 
     @Enumerated(EnumType.STRING)
-     PaymentMethod paymentMethod;
+    PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
-     PaymentStatus paymentStatus;
+    PaymentStatus paymentStatus;
 
     @OneToMany(mappedBy = "booking")
-     List<PaymentHistory> paymentHistories;
+    List<PaymentHistory> paymentHistories;
 
 
     @Column(name = "points_earned", nullable = false, columnDefinition = "decimal(38,2) default 0")
-     BigDecimal pointsEarned;
+    BigDecimal pointsEarned;
 
     @Column(name = "points_used", columnDefinition = "decimal(38,2) default 0")
-     BigDecimal pointsUsed;
+    BigDecimal pointsUsed;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
-     List<LoyaltyTransaction> loyaltyTransactions;
+    List<LoyaltyTransaction> loyaltyTransactions;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    List<BookingCargo> bookingCargos;
 
 }
