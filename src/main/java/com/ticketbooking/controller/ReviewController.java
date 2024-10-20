@@ -5,6 +5,7 @@ import com.ticketbooking.dto.ReviewRequest;
 import com.ticketbooking.model.Review;
 import com.ticketbooking.repo.ReviewRepo;
 import com.ticketbooking.service.ReviewService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/reviews")
 @RequiredArgsConstructor
+@Tag(name = "Review Controller")
 public class ReviewController {
 
     private final ReviewService reviewService;

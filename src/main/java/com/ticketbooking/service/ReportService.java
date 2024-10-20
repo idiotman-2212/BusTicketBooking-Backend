@@ -11,4 +11,8 @@ public interface ReportService {
     ReportResponse getWeekTotalRevenueOfCurrentDate(String currentDate);
 
     ReportResponse getTopRoute(String startDate, String endDate, String timeOption);
+
+    ReportResponse getWeeklyPointsReport(String startDate, String endDate);
+    ReportResponse getMonthlyPointsReport(String startDate, String endDate);
+    ReportResponse getYearlyPointsReport(String startDate, String endDate);
 }

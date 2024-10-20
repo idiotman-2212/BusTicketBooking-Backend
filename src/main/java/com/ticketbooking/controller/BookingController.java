@@ -53,6 +53,12 @@ public class BookingController {
         return bookingService.getAllBookingFromTripAndDate(tripId);
     }
 
+    @GetMapping("/available-seats/{tripId}")
+    public ResponseEntity<List<String>> getAvailableSeats(@PathVariable Long tripId) {
+        List<String> availableSeats = bookingService.getAvailableSeats(tripId);
+        return ResponseEntity.ok(availableSeats);  // Trả về danh sách ghế trống
+    }
+
     @PostMapping("/site1")
     public ResponseEntity<List<Booking>> createBookingsForRegisteredUser(@RequestBody BookingRequest bookingRequest) {
         return ResponseEntity
@@ -86,5 +92,4 @@ public class BookingController {
         List<Booking> bookings = bookingService.findBookingsByPhone(phone);
         return ResponseEntity.ok(bookings);
     }
-
 }

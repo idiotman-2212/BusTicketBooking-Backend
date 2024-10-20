@@ -5,10 +5,13 @@ import com.ticketbooking.model.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+@Repository
 public interface ReportRepo extends JpaRepository<Booking, Long> {
 
     @Query(value = """
@@ -54,5 +57,45 @@ public interface ReportRepo extends JpaRepository<Booking, Long> {
     limit 5
 """)
     List<TopRouteDto> getTopRoute(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+
+    // Truy vấn báo cáo theo tuần
+    @Query("""
+    select new com.ticketbooking.dto.WeeklyPointsReportDto(year(t.transactionDate), week(t.transactionDate),
+        sum(case when t.transactionType = 'EARN' then t.amount else 0 end),
+        sum(case when t.transactionType = 'USE' then t.amount else 0 end))
+    from LoyaltyTransaction t
+    where t.user.username = :username and t.transactionDate between :startDate and :endDate
+    group by year(t.transactionDate), week(t.transactionDate)
+""")
+    List<WeeklyPointsReportDto> getWeeklyPointsReport(@Param("username") String username,
+                                                      @Param("startDate") LocalDateTime startDate,
+                                                      @Param("endDate") LocalDateTime endDate);
+
+    // Truy vấn báo cáo theo tháng
+    @Query("""
+        select new com.ticketbooking.dto.MonthlyPointsReportDto(year(t.transactionDate), month(t.transactionDate),
+            sum(case when t.transactionType = 'EARN' then t.amount else 0 end),
+            sum(case when t.transactionType = 'USE' then t.amount else 0 end))
+        from LoyaltyTransaction t
+        where t.user.username = :username and t.transactionDate between :startDate and :endDate
+        group by year(t.transactionDate), month(t.transactionDate)
+    """)
+    List<MonthlyPointsReportDto> getMonthlyPointsReport(@Param("username") String username,
+                                                        @Param("startDate") LocalDateTime startDate,
+                                                        @Param("endDate") LocalDateTime endDate);
+
+    // Truy vấn báo cáo theo năm
+    @Query("""
+        select new com.ticketbooking.dto.YearlyPointsReportDto(year(t.transactionDate),
+            sum(case when t.transactionType = 'EARN' then t.amount else 0 end),
+            sum(case when t.transactionType = 'USE' then t.amount else 0 end))
+        from LoyaltyTransaction t
+        where t.user.username = :username and t.transactionDate between :startDate and :endDate
+        group by year(t.transactionDate)
+    """)
+    List<YearlyPointsReportDto> getYearlyPointsReport(@Param("username") String username,
+                                                      @Param("startDate") LocalDateTime startDate,
+                                                      @Param("endDate") LocalDateTime endDate);
 
 }

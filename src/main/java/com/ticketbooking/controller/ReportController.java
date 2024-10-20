@@ -44,4 +44,25 @@ public class ReportController {
     ) {
         return reportService.getTopRoute(startDate, endDate, timeOption);
     }
+
+    @GetMapping("/points/weekly")
+    public ReportResponse getWeeklyPointsReport(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        return reportService.getWeeklyPointsReport(startDate, endDate);
+    }
+
+    @GetMapping("/points/monthly")
+    public ReportResponse getMonthlyPointsReport(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        return reportService.getMonthlyPointsReport(startDate, endDate);
+    }
+
+    @GetMapping("/points/yearly")
+    public ReportResponse getYearlyPointsReport(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        return reportService.getYearlyPointsReport(startDate, endDate);
+    }
 }

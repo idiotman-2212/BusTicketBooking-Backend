@@ -17,6 +17,7 @@ com\ticketbooking\model\Review.class
 com\ticketbooking\service\impl\ReviewServiceImpl.class
 com\ticketbooking\service\TripService.class
 com\ticketbooking\controller\ReviewController.class
+com\ticketbooking\dto\CargoRequest.class
 com\ticketbooking\dto\ChangePwdRequest.class
 com\ticketbooking\exception\UnauthorizedException.class
 com\ticketbooking\model\Notification.class
@@ -44,6 +45,7 @@ com\ticketbooking\service\CoachService.class
 com\ticketbooking\dto\RegisterRequest$RegisterRequestBuilder.class
 com\ticketbooking\exception\GlobalExceptionHandler.class
 com\ticketbooking\model\LoyaltyTransaction.class
+com\ticketbooking\dto\MonthlyPointsReportDto.class
 com\ticketbooking\model\Trip.class
 com\ticketbooking\service\impl\UserPermissionServiceImpl.class
 com\ticketbooking\controller\DiscountController.class
@@ -56,6 +58,7 @@ com\ticketbooking\repo\ProvinceRepo.class
 com\ticketbooking\dto\ScreenPermissionDto$ScreenPermissionDtoBuilder.class
 com\ticketbooking\service\RoleService.class
 com\ticketbooking\controller\CargoController.class
+com\ticketbooking\service\impl\BookingCargoServiceImpl.class
 com\ticketbooking\service\impl\DiscountServiceImpl.class
 com\ticketbooking\repo\LoyaltyTransactionRepo.class
 com\ticketbooking\config\WebSocketConfig.class
@@ -88,6 +91,7 @@ com\ticketbooking\service\DriverService.class
 com\ticketbooking\model\Booking.class
 com\ticketbooking\model\UserNotification.class
 com\ticketbooking\model\UserPermission$UserPermissionBuilder.class
+com\ticketbooking\dto\WeeklyPointsReportDto.class
 com\ticketbooking\config\PasswordEncoderBean.class
 com\ticketbooking\service\ProvinceService.class
 com\ticketbooking\service\BookingService.class
@@ -133,6 +137,7 @@ com\ticketbooking\service\impl\UserServiceImpl.class
 com\ticketbooking\dto\YearRevenueDto.class
 com\ticketbooking\dto\ForgotRequest$ForgotRequestBuilder.class
 com\ticketbooking\dto\AuthenticationRequest$AuthenticationRequestBuilder.class
+com\ticketbooking\dto\CargoRequest$CargoRequestBuilder.class
 com\ticketbooking\model\Coach.class
 com\ticketbooking\dto\AuthenticationResponse.class
 com\ticketbooking\service\LogoutService.class
@@ -149,6 +154,7 @@ com\ticketbooking\dto\ReviewRequest$ReviewRequestBuilder.class
 com\ticketbooking\model\Discount$DiscountBuilder.class
 com\ticketbooking\service\impl\NotificationServiceImpl.class
 com\ticketbooking\service\impl\ProvinceServiceImpl.class
+com\ticketbooking\service\BookingCargoService.class
 com\ticketbooking\controller\ReportController.class
 com\ticketbooking\model\enumType\PaymentMethod.class
 com\ticketbooking\utils\AppConstants.class
@@ -160,4 +166,5 @@ com\ticketbooking\service\impl\ReportServiceImpl.class
 com\ticketbooking\dto\LoyaltyTransactionDTO$LoyaltyTransactionDTOBuilder.class
 com\ticketbooking\dto\ReportResponse.class
 com\ticketbooking\dto\EmailMessage.class
+com\ticketbooking\dto\YearlyPointsReportDto.class
 com\ticketbooking\dto\MonthRevenueDto.class

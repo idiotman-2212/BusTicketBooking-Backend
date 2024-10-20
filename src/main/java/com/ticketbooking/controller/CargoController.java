@@ -3,6 +3,7 @@ package com.ticketbooking.controller;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.Cargo;
 import com.ticketbooking.service.CargoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/cargos")
 @RequiredArgsConstructor
+@Tag(name = "Cargo Controller")
 public class CargoController {
 
     private final CargoService cargoService;

@@ -16,11 +16,13 @@ import java.util.Optional;
 public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     @Query("""
-            select b from Booking b
-            where b.trip.id=:tripId 
-            and b.paymentStatus <> 'CANCEL'
-            """)
+        select b from Booking b
+        where b.trip.id=:tripId 
+        and b.paymentStatus <> 'CANCEL'
+        and b.paymentStatus <> 'REFUNDED'
+        """)
     List<Booking> getAllBookingFromTripAndDate(@Param("tripId") Long tripId);
+
 
     @Query(value = """
             select * from booking b where b.phone=:phone /*and b.username is null*/
@@ -32,4 +34,11 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
 
     List<Booking> findByTrip(Trip trip);
 
+    @Query("SELECT b FROM Booking b WHERE b.paymentStatus = 'PAID' AND b.trip.departureDateTime < :threshold")
+    List<Booking> findPaidBookingsBefore(@Param("threshold") LocalDateTime threshold);
+
+    @Query("SELECT b FROM Booking b WHERE b.paymentStatus = 'UNPAID' AND b.trip.departureDateTime < :threshold")
+    List<Booking> findUnpaidBookingsBefore(@Param("threshold") LocalDateTime threshold);
+
+    List<Booking> findAllByTripId(Long tripId);
 }

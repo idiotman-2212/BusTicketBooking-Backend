@@ -3,8 +3,10 @@ package com.ticketbooking.service.impl;
 import com.ticketbooking.dto.BookingRequest;
 import com.ticketbooking.dto.CargoRequest;
 import com.ticketbooking.dto.PageResponse;
+import com.ticketbooking.exception.BookingException;
 import com.ticketbooking.exception.ResourceNotFoundException;
 import com.ticketbooking.model.*;
+import com.ticketbooking.model.enumType.PaymentMethod;
 import com.ticketbooking.model.enumType.PaymentStatus;
 import com.ticketbooking.model.enumType.TransactionType;
 import com.ticketbooking.repo.*;
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepo bookingRepo;
+    private final TripRepo tripRepo;
     private final PaymentHistoryRepo paymentHistoryRepo;
     private final ObjectValidator<Booking> objectValidator;
     private final UserRepo userRepo;
@@ -327,23 +330,86 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @CacheEvict(cacheNames = {"bookings", "bookings_paging"}, allEntries = true)
+    @Transactional
     public String delete(Long id) {
         Booking foundBooking = findById(id);
         PaymentStatus oldPaymentStatus = foundBooking.getPaymentStatus();
-        if (oldPaymentStatus == PaymentStatus.CANCEL) {
-            return "This Booking has already CANCELED";
+        LocalDateTime departureTime = foundBooking.getTrip().getDepartureDateTime();
+        LocalDateTime currentTime = LocalDateTime.now();
+
+        // Kiểm tra nếu vé đã bị hủy hoặc hoàn tiền
+        if (oldPaymentStatus == PaymentStatus.CANCEL || oldPaymentStatus == PaymentStatus.REFUNDED) {
+            throw new BookingException("This Booking has already been CANCELED or REFUNDED");
         }
-        foundBooking.setPaymentStatus(PaymentStatus.CANCEL);
-        bookingRepo.save(foundBooking);
-        paymentHistoryRepo.save(PaymentHistory
-                .builder()
-                .oldStatus(oldPaymentStatus)
-                .newStatus(foundBooking.getPaymentStatus())
-                .statusChangeDateTime(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
-                .booking(foundBooking)
-                .build());
-        return "Update Booking<%d> PAYMENT_STATUS(%s ---> %s)".formatted(id, oldPaymentStatus, PaymentStatus.CANCEL);
+
+        // Kiểm tra thời gian hủy
+        if (currentTime.isAfter(departureTime.minusHours(24))) {
+            throw new BookingException("Booking <%d> cannot be canceled within 24 hours before departure.".formatted(id));
+        }
+
+        // Xử lý hủy vé
+        String cancelResult = cancelBooking(foundBooking, oldPaymentStatus, currentTime);
+
+        // Xử lý hoàn tiền nếu cần
+        if (oldPaymentStatus == PaymentStatus.PAID && foundBooking.getPaymentMethod() == PaymentMethod.CARD) {
+            return refundBooking(foundBooking, currentTime);
+        }
+
+        return cancelResult;
     }
+
+    private String cancelBooking(Booking booking, PaymentStatus oldStatus, LocalDateTime currentTime) {
+        booking.setPaymentStatus(PaymentStatus.CANCEL);
+        bookingRepo.save(booking);
+
+        paymentHistoryRepo.save(PaymentHistory.builder()
+                .oldStatus(oldStatus)
+                .newStatus(PaymentStatus.CANCEL)
+                .statusChangeDateTime(currentTime)
+                .booking(booking)
+                .build());
+
+        releaseSeat(booking.getSeatNumber());
+
+        return "Booking <%d> has been canceled successfully.".formatted(booking.getId());
+    }
+
+    private String refundBooking(Booking booking, LocalDateTime currentTime) {
+        boolean refundSuccess = simulateRefund(booking.getTotalPayment());
+        if (!refundSuccess) {
+            throw new RuntimeException("Refund failed.");
+        }
+
+        booking.setPaymentStatus(PaymentStatus.REFUNDED);
+        bookingRepo.save(booking);
+
+        paymentHistoryRepo.save(PaymentHistory.builder()
+                .oldStatus(PaymentStatus.CANCEL)
+                .newStatus(PaymentStatus.REFUNDED)
+                .statusChangeDateTime(currentTime)
+                .booking(booking)
+                .build());
+
+        // Đảm bảo ghế được giải phóng sau khi hoàn tiền
+        releaseSeat(booking.getSeatNumber());
+
+        return "Booking <%d> has been canceled and refunded successfully.".formatted(booking.getId());
+    }
+
+    private void releaseSeat(String seatNumber) {
+        // Implement logic to release the seat
+        // This might involve updating a seat status in a separate table
+        // or sending a message to a seat management service
+        System.out.println("Seat " + seatNumber + " has been released.");
+    }
+
+    private boolean simulateRefund(BigDecimal totalPayment) {
+        // Implement actual refund logic here
+        System.out.println("Refunding amount: " + totalPayment);
+        return true; // Simulate successful refund
+    }
+
+
 
     @Override
     public List<Booking> getAllBookingFromTripAndDate(Long tripId) {
@@ -353,6 +419,44 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<Booking> findBookingsByPhone(String phone) {
         return bookingRepo.findByPhone(phone);
+    }
+
+    @Override
+    public List<String> getAvailableSeats(Long tripId) {
+        Trip trip = tripRepo.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+
+        Coach coach = trip.getCoach();
+        int capacity = coach.getCapacity();
+        List<String> allSeats = generateSeats(capacity);
+
+        List<Booking> bookings = bookingRepo.findAllByTripId(tripId);
+        for (Booking booking : bookings) {
+            String seatNumber = booking.getSeatNumber();
+            if (seatNumber != null && allSeats.contains(seatNumber)
+                    && booking.getPaymentStatus() != PaymentStatus.REFUNDED) {
+                allSeats.remove(seatNumber);
+            }
+        }
+
+        // Trả về danh sách ghế còn trống
+        return allSeats;
+    }
+
+
+    // Hàm tạo danh sách ghế dựa trên sức chứa
+    private List<String> generateSeats(int capacity) {
+        List<String> seats = new ArrayList<>();
+        int halfCapacity = (int) Math.ceil(capacity / 2.0);
+
+        for (int i = 1; i <= halfCapacity; i++) {
+            seats.add("A" + i);
+        }
+        for (int i = 1; i <= (capacity - halfCapacity); i++) {
+            seats.add("B" + i);
+        }
+
+        return seats;
     }
 
 }

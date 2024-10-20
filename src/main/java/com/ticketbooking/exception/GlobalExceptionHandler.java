@@ -62,4 +62,15 @@ public class GlobalExceptionHandler {
                 .message(exception.getMessage())
                 .build();
     }
+
+    @ExceptionHandler(BookingException.class)
+    public ResponseEntity<ApiErrorResponse> handleBookingException(BookingException ex) {
+        ApiErrorResponse errorResponse = ApiErrorResponse.builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .dateTime(LocalDateTime.now())
+                .message(ex.getErrorMessage())
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
 }

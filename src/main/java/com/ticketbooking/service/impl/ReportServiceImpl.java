@@ -6,13 +6,18 @@ import com.ticketbooking.service.ReportService;
 import com.ticketbooking.utils.AppConstants;
 import com.ticketbooking.utils.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Service
@@ -285,4 +290,112 @@ public class ReportServiceImpl implements ReportService {
                 .mapToDouble(revenue -> revenue.getTotalRevenue().doubleValue())
                 .sum();
     }
+
+    // Lấy username của người dùng hiện tại
+    private String getCurrentUsername() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else {
+            return principal.toString();
+        }
+    }
+
+    @Override
+    public ReportResponse getWeeklyPointsReport(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime startLocalDateTime = (startDate == null || startDate.isEmpty())
+                ? LocalDateTime.now().minusWeeks(1)
+                : LocalDate.parse(startDate, formatter).atStartOfDay();
+
+        LocalDateTime endLocalDateTime = (endDate == null || endDate.isEmpty())
+                ? LocalDateTime.now()
+                : LocalDate.parse(endDate, formatter).atTime(23, 59, 59);
+
+        String username = getCurrentUsername();
+        List<WeeklyPointsReportDto> weeklyReport = reportRepo.getWeeklyPointsReport(username, startLocalDateTime, endLocalDateTime);
+
+        return processWeeklyPointsReport(weeklyReport);
+    }
+
+    @Override
+    public ReportResponse getMonthlyPointsReport(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime startLocalDateTime = (startDate == null || startDate.isEmpty())
+                ? LocalDateTime.now().minusMonths(1)
+                : LocalDate.parse(startDate, formatter).atStartOfDay();
+
+        LocalDateTime endLocalDateTime = (endDate == null || endDate.isEmpty())
+                ? LocalDateTime.now()
+                : LocalDate.parse(endDate, formatter).atTime(23, 59, 59);
+
+        String username = getCurrentUsername();
+        List<MonthlyPointsReportDto> monthlyReport = reportRepo.getMonthlyPointsReport(username, startLocalDateTime, endLocalDateTime);
+
+        return processMonthlyPointsReport(monthlyReport);
+    }
+
+    @Override
+    public ReportResponse getYearlyPointsReport(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime startLocalDateTime = (startDate == null || startDate.isEmpty())
+                ? LocalDateTime.now().minusYears(1)
+                : LocalDate.parse(startDate, formatter).atStartOfDay();
+
+        LocalDateTime endLocalDateTime = (endDate == null || endDate.isEmpty())
+                ? LocalDateTime.now()
+                : LocalDate.parse(endDate, formatter).atTime(23, 59, 59);
+
+        String username = getCurrentUsername();
+        List<YearlyPointsReportDto> yearlyReport = reportRepo.getYearlyPointsReport(username, startLocalDateTime, endLocalDateTime);
+
+        return processYearlyPointsReport(yearlyReport);
+    }
+
+
+    // Phương thức xử lý báo cáo theo tuần
+    private ReportResponse processWeeklyPointsReport(List<WeeklyPointsReportDto> weeklyReport) {
+        Map<String, Map<String, Object>> reportData = new LinkedHashMap<>();
+        weeklyReport.forEach(report -> {
+            Map<String, Object> pointsData = new LinkedHashMap<>();
+            pointsData.put("Points Earned", report.getPointsEarned());
+            pointsData.put("Points Used", report.getPointsUsed());
+            reportData.put("Week %d of %d".formatted(report.getWeek(), report.getYear()), pointsData);
+        });
+
+        ReportResponse response = new ReportResponse();
+        response.setReportData(reportData);
+        return response;
+    }
+
+    // Phương thức xử lý báo cáo theo tháng
+    private ReportResponse processMonthlyPointsReport(List<MonthlyPointsReportDto> monthlyReport) {
+        Map<String, Map<String, Object>> reportData = new LinkedHashMap<>();
+        monthlyReport.forEach(report -> {
+            Map<String, Object> pointsData = new LinkedHashMap<>();
+            pointsData.put("Points Earned", report.getPointsEarned());
+            pointsData.put("Points Used", report.getPointsUsed());
+            reportData.put("%d/%02d".formatted(report.getYear(), report.getMonth()), pointsData);
+        });
+
+        ReportResponse response = new ReportResponse();
+        response.setReportData(reportData);
+        return response;
+    }
+
+    // Phương thức xử lý báo cáo theo năm
+    private ReportResponse processYearlyPointsReport(List<YearlyPointsReportDto> yearlyReport) {
+        Map<String, Map<String, Object>> reportData = new LinkedHashMap<>();
+        yearlyReport.forEach(report -> {
+            Map<String, Object> pointsData = new LinkedHashMap<>();
+            pointsData.put("Points Earned", report.getPointsEarned());
+            pointsData.put("Points Used", report.getPointsUsed());
+            reportData.put(String.valueOf(report.getYear()), pointsData);
+        });
+
+        ReportResponse response = new ReportResponse();
+        response.setReportData(reportData);
+        return response;
+    }
+
 }

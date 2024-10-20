@@ -32,4 +32,6 @@ public interface BookingService {
     List<Booking> getAllBookingFromTripAndDate(Long tripId);
 
     List<Booking> findBookingsByPhone(String phone);
+
+    List<String> getAvailableSeats(Long tripId);
 }

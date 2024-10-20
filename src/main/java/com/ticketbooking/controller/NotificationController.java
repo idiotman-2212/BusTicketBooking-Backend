@@ -5,6 +5,7 @@ import com.ticketbooking.dto.NotificationRequest;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.UserNotification;
 import com.ticketbooking.service.NotificationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@Tag(name = "Notification Controller")
 public class NotificationController {
 
     private final NotificationService notificationService;

@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -83,6 +84,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .phone(registerRequest.getPhone())
                 .gender(false)
                 .active(true)
+                .loyaltyPoints(BigDecimal.ZERO)
                 .build();
 
         Role role = roleRepo.findByRoleCode(registerRequest.getRole()).get(); // role_customer
