@@ -1,6 +1,5 @@
 package com.ticketbooking.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -72,5 +71,9 @@ public class Trip {
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
     @JsonIgnore
     List<Review> reviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<TripLog> tripLogs;
 }
 

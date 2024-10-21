@@ -95,6 +95,11 @@ public class User implements UserDetails {
     @JsonIgnore
     List<Notification> sentNotifications = new ArrayList<>();
 
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<TripLog> tripLogs = new ArrayList<>();
+
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     List<UserPermission> permissions;
 

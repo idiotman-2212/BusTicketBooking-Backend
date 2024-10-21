@@ -1,13 +1,13 @@
 package com.ticketbooking.service;
 
 import com.ticketbooking.dto.EmailMessage;
-import com.ticketbooking.dto.NotificationRequest;
-import com.ticketbooking.model.Booking;
-import com.ticketbooking.model.PaymentHistory;
+import com.ticketbooking.model.*;
 import com.ticketbooking.model.enumType.PaymentStatus;
 import com.ticketbooking.model.enumType.RecipientType;
 import com.ticketbooking.repo.BookingRepo;
+import com.ticketbooking.repo.NotificationRepo;
 import com.ticketbooking.repo.PaymentHistoryRepo;
+import com.ticketbooking.repo.UserNotificationRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,60 +21,41 @@ import java.util.List;
 public class ScheduleJobService {
 
     private final BookingRepo bookingRepo;
-    private final NotificationService notificationService;
+    private final NotificationRepo notificationRepo;
+    private final UserNotificationRepo userNotificationRepo;
     private final SmsService smsService;
     private final MailService mailService;
     private final Environment env;
     private final PaymentHistoryRepo paymentHistoryRepo;
 
     // 1. Nhắc nhở thanh toán cho vé UNPAID trước 1 ngày khởi hành
-    @Scheduled(cron = "0 0 9 * * ?") // Chạy mỗi ngày lúc 9 giờ sáng
+    @Scheduled(cron = "0 0 * * * ?") // Chạy mỗi giờ
     public void remindUnpaidBookings() {
-        LocalDateTime currentTime = LocalDateTime.now();
-        LocalDateTime reminderThreshold = currentTime.plusDays(1); // Nhắc nhở trước 1 ngày khởi hành
-
+        System.out.println("remindUnpaidBookings() is running...");
+        LocalDateTime reminderThreshold = LocalDateTime.now().plusHours(24);
         List<Booking> unpaidBookings = bookingRepo.findUnpaidBookingsBefore(reminderThreshold);
+        System.out.println("Number of unpaid bookings found: " + unpaidBookings.size());
 
         for (Booking booking : unpaidBookings) {
-            // Gửi thông báo qua hệ thống
-            notificationService.sendNotification(
-                    NotificationRequest.builder()
-                            .title("Nhắc nhở thanh toán")
-                            .message("Vé đặt của quý khách chưa được thanh toán. Vui lòng thanh toán trước 24 giờ khởi hành.")
-                            .recipientType(RecipientType.INDIVIDUAL)
-                            .senderUsername("System") // Thêm giá trị senderUsername
-                            .recipientIdentifiers(List.of(booking.getUser().getUsername()))
-                            .build()
-            );
-
-            // Gửi SMS
+            System.out.println("Unpaid booking ID: " + booking.getId() + " | Departure Time: " + booking.getTrip().getDepartureDateTime());
             String message = "Vé đặt của quý khách chưa được thanh toán. Vui lòng thanh toán trước 24 giờ khởi hành.";
-            smsService.sendSms(booking.getPhone(), message);
-
-            // Gửi Email
-            String emailContent = "Kính chào quý khách, vui lòng thanh toán vé của bạn trước 24 giờ khởi hành.";
-            mailService.send(new EmailMessage(env.getProperty("spring.mail.username"),
-                    booking.getEmail(),
-                    "Nhắc nhở thanh toán",
-                    emailContent));
+            sendNotificationAndMessages(booking, "Nhắc nhở thanh toán", message);
         }
     }
 
     // 2. Tự động hủy vé chưa thanh toán trước khi khởi hành
-    @Scheduled(cron = "0 0 * * * ?") // Chạy mỗi giờ
+    @Scheduled(cron = "0 0 * * * ?") // Chạy mỗi phút
     public void autoCancelUnpaidBookings() {
-        LocalDateTime currentTime = LocalDateTime.now();
-        LocalDateTime cancellationThreshold = currentTime.plusHours(24); // Hủy nếu chưa thanh toán và còn cách giờ khởi hành 24 giờ
-
+        System.out.println("autoCancelUnpaidBookings() is running...");
+        LocalDateTime cancellationThreshold = LocalDateTime.now().plusHours(24);
         List<Booking> unpaidBookings = bookingRepo.findUnpaidBookingsBefore(cancellationThreshold);
 
         for (Booking booking : unpaidBookings) {
-            // Thay đổi trạng thái của booking thành CANCEL
             PaymentStatus oldStatus = booking.getPaymentStatus();
             booking.setPaymentStatus(PaymentStatus.CANCEL);
             bookingRepo.save(booking);
 
-            // Ghi lại lịch sử thanh toán
+            // Lưu lịch sử thanh toán
             paymentHistoryRepo.save(PaymentHistory.builder()
                     .oldStatus(oldStatus)
                     .newStatus(PaymentStatus.CANCEL)
@@ -82,61 +63,60 @@ public class ScheduleJobService {
                     .booking(booking)
                     .build());
 
-            // Gửi thông báo hủy qua hệ thống
-            notificationService.sendNotification(
-                    NotificationRequest.builder()
-                            .title("Vé đặt đã bị hủy")
-                            .message("Vé của quý khách đã bị hủy do không thanh toán trước 24 giờ khởi hành.")
-                            .recipientType(RecipientType.INDIVIDUAL)
-                            .senderUsername("System") // Thêm giá trị senderUsername
-                            .recipientIdentifiers(List.of(booking.getUser().getUsername()))
-                            .build()
-            );
-
-            // Gửi SMS
             String message = "Vé của quý khách đã bị hủy do không thanh toán trước 24 giờ khởi hành.";
-            smsService.sendSms(booking.getPhone(), message);
-
-            // Gửi Email
-            String emailContent = "Kính chào quý khách, vé của bạn đã bị hủy vì không thanh toán trước giờ khởi hành.";
-            mailService.send(new EmailMessage(env.getProperty("spring.mail.username"),
-                    booking.getEmail(),
-                    "Vé đặt đã bị hủy",
-                    emailContent));
+            sendNotificationAndMessages(booking, "Vé đặt đã bị hủy", message);
         }
     }
 
-    // Lên lịch gửi thông báo nhắc nhở thời gian khởi hành chuyến
-    @Scheduled(cron = "0 0 9 * * ?")
+    // 3. Nhắc nhở vé đã thanh toán về thời gian khởi hành
+    @Scheduled(cron = "0 0 9 * * ?") // Chạy lúc 9 giờ sáng hàng ngày
     public void remindPaidBookingsForDeparture() {
-        LocalDateTime currentTime = LocalDateTime.now();
-        LocalDateTime reminderThreshold = currentTime.plusDays(1);  // Nhắc nhở trước 1 ngày khởi hành
-
+        System.out.println("remindPaidBookingsForDeparture() is running...");
+        LocalDateTime reminderThreshold = LocalDateTime.now().plusDays(1);
         List<Booking> paidBookings = bookingRepo.findPaidBookingsBefore(reminderThreshold);
 
         for (Booking booking : paidBookings) {
-            // Gửi thông báo qua hệ thống
-            notificationService.sendNotification(
-                    NotificationRequest.builder()
-                            .title("Nhắc nhở khởi hành")
-                            .message("Chuyến xe của quý khách sẽ khởi hành vào " + booking.getTrip().getDepartureDateTime())
-                            .recipientType(RecipientType.INDIVIDUAL)
-                            .senderUsername("System")  // Người gửi là hệ thống
-                            .recipientIdentifiers(List.of(booking.getUser().getUsername()))
-                            .build()
-            );
-
-            // Gửi SMS
-            String message = "Chuyến xe của quý khách sẽ khởi hành vào " + booking.getTrip().getDepartureDateTime() + ". Vui lòng có mặt đúng giờ.";
-            smsService.sendSms(booking.getPhone(), message);
-
-            // Gửi Email
-            String emailContent = "Kính chào quý khách, chuyến xe của bạn sẽ khởi hành vào " + booking.getTrip().getDepartureDateTime() + ". Vui lòng có mặt đúng giờ.";
-            mailService.send(new EmailMessage(env.getProperty("spring.mail.username"),
-                    booking.getEmail(),
-                    "Nhắc nhở khởi hành",
-                    emailContent));
+            String message = "Chuyến xe của quý khách sẽ khởi hành vào " + booking.getTrip().getDepartureDateTime();
+            sendNotificationAndMessages(booking, "Nhắc nhở khởi hành", message);
         }
+    }
+
+    // Phương thức chung để gửi thông báo, SMS và email
+    private void sendNotificationAndMessages(Booking booking, String title, String message) {
+        // Kiểm tra nếu người dùng không tồn tại
+        if (booking.getUser() == null) {
+            System.out.println("Booking ID " + booking.getId() + " không có người dùng gắn liền, không thể gửi thông báo.");
+            return;
+        }
+
+        // Tạo và lưu thông báo
+        Notification notification = new Notification();
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setSendDateTime(LocalDateTime.now());
+        notification.setRecipientType(RecipientType.INDIVIDUAL);
+        notification.setRecipientIdentifiers(booking.getUser().getUsername());
+        notification.setSender(User.builder().username("system").build()); // Người gửi là "system"
+        notificationRepo.save(notification);
+
+        // Tạo UserNotification
+        UserNotification userNotification = new UserNotification();
+        userNotification.setNotification(notification);
+        userNotification.setUser(booking.getUser());
+        userNotification.setIsRead(false);
+        userNotificationRepo.save(userNotification);
+/*
+        // Gửi SMS
+        smsService.sendSms(booking.getPhone(), message);
+
+        // Gửi Email
+        String emailContent = "Kính chào quý khách, " + message;
+        mailService.send(new EmailMessage(env.getProperty("spring.mail.username"),
+                booking.getEmail(),
+                title,
+                emailContent));
+
+ */
     }
 
 }
