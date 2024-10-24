@@ -132,9 +132,12 @@ public class TripServiceImpl implements TripService {
                 System.out.println("Loyalty points and transaction saved for booking " + booking.getId());
                 // Gửi thông báo đến người dùng
                 String title = "THÔNG BÁO HOÀN THÀNH CHUYẾN ĐI";
-                String message = "Chuyến đi của bạn từ " + trip.getSource().getName() + " đến " + trip.getDestination().getName()
-                        + " đã hoàn thành. Bạn đã nhận được " + pointsEarned + " điểm xu vào tài khoản của mình. "
-                        + "Chúng tôi hy vọng bạn đã có một chuyến đi tuyệt vời và mong sớm gặp lại bạn!";
+                String message = "Chuyến đi của bạn từ " + trip.getSource().getName() +
+                        " (Đón tại: " + trip.getPickUpLocation().getName() + ")" +
+                        " đến " + trip.getDestination().getName() +
+                        " (Trả tại: " + trip.getDropOffLocation().getName() + ")" +
+                        " đã hoàn thành. Bạn đã nhận được " + pointsEarned + " điểm xu.";
+
 
                 sendTripCompletionNotification(user, trip,pointsEarned, message);
 
@@ -170,14 +173,14 @@ public class TripServiceImpl implements TripService {
     @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
     public Trip save(Trip trip) {
 
-        // check if source == destination
-        if (trip.getSource().getId() == trip.getDestination().getId()) {
-            throw new InvalidInputException("Start location <%s> and End location <%s> cannot be the same"
-                    .formatted(
-                            trip.getSource().getName(),
-                            trip.getDestination().getName()
-                    )
-            );
+        // Kiểm tra địa điểm đón và trả không được trùng
+        if (trip.getPickUpLocation().getId().equals(trip.getDropOffLocation().getId())) {
+            throw new InvalidInputException("Pick-up location and drop-off location cannot be the same");
+        }
+
+        // Kiểm tra điểm đi và điểm đến không trùng
+        if (trip.getSource().getId().equals(trip.getDestination().getId())) {
+            throw new InvalidInputException("Source and destination cannot be the same");
         }
 
         // Check if the driver has any trip within the last 2 days
@@ -226,6 +229,11 @@ public class TripServiceImpl implements TripService {
     @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
     public Trip update(Trip trip) {
         Trip existingTrip = findById(trip.getId());
+
+        // Kiểm tra địa điểm đón và trả không được trùng
+        if (trip.getPickUpLocation().getId().equals(trip.getDropOffLocation().getId())) {
+            throw new InvalidInputException("Pick-up location and drop-off location cannot be the same");
+        }
 
         // Nếu trạng thái completed chuyển từ false sang true, gọi phương thức completeTrip
         if (!existingTrip.getCompleted() && trip.getCompleted()) {

@@ -160,7 +160,7 @@ public class LoyaltyPointsServiceImpl implements LoyaltyPointsService {
 
                 // Thông tin chuyến đi
                 .tripId(trip.getId())
-                .source(trip.getSource().getName()) // Giả sử có phương thức getName() cho Province
+                .source(trip.getSource().getName())
                 .destination(trip.getDestination().getName())
                 .departureDateTime(trip.getDepartureDateTime())
                 .price(trip.getPrice())

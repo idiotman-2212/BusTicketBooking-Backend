@@ -24,39 +24,37 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
 public class BookingRequest {
 
-     Long id;
+    Long id;
 
-     User user;
+    User user;
 
-     Trip trip;
+    Trip trip;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
-     LocalDateTime bookingDateTime;
+    LocalDateTime bookingDateTime;
 
-     String[] seatNumber;
+    String[] seatNumber;
 
-     BookingType bookingType;
+    BookingType bookingType;
 
-     String pickUpAddress;
+    String firstName;
 
-     String firstName;
+    String lastName;
 
-     String lastName;
+    String phone;
 
-     String phone;
+    String email;
 
-     String email;
-
-     BigDecimal totalPayment;
+    BigDecimal totalPayment;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-     LocalDateTime paymentDateTime;
+    LocalDateTime paymentDateTime;
 
-     PaymentMethod paymentMethod;
+    PaymentMethod paymentMethod;
 
-     PaymentStatus paymentStatus;
+    PaymentStatus paymentStatus;
 
-     BigDecimal pointsUsed;
+    BigDecimal pointsUsed;
 
     List<CargoRequest> cargoRequests = new ArrayList<>();
 
@@ -69,7 +67,6 @@ public class BookingRequest {
                 ", bookingDateTime=" + bookingDateTime +
                 ", seatNumber=" + Arrays.toString(seatNumber) +
                 ", bookingType=" + bookingType +
-                ", pickUpAddress='" + pickUpAddress + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", phone='" + phone + '\'' +

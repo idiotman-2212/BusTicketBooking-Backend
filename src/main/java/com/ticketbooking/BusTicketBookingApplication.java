@@ -177,7 +177,7 @@ public class BusTicketBookingApplication implements CommandLineRunner {
                 .bookingDateTime(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
                 .seatNumber("2A")
                 .bookingType(BookingType.ONEWAY)
-                .pickUpAddress("Nhà xe ngã tư TĐ")
+                //.pickUpAddress("Nhà xe ngã tư TĐ")
                 .phone("0914683078")
                 .totalPayment(BigDecimal.valueOf(150000))
                 .paymentDateTime(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))

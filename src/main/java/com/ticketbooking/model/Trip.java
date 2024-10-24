@@ -47,6 +47,14 @@ public class Trip {
     Province destination;
 
     @ManyToOne
+    @JoinColumn(name = "pick_up_location_id")
+    Location pickUpLocation;
+
+    @ManyToOne
+    @JoinColumn(name = "drop_off_location_id")
+    Location dropOffLocation;
+
+    @ManyToOne
     @JoinColumn(name = "discount_id")
     Discount discount;
 
@@ -76,4 +84,3 @@ public class Trip {
     @JsonIgnore
     List<TripLog> tripLogs;
 }
-

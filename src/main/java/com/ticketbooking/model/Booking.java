@@ -47,8 +47,6 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     BookingType bookingType;
 
-    String pickUpAddress;
-
     String custFirstName;
 
     String custLastName;

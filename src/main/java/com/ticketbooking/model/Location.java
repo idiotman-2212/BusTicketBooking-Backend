@@ -1,0 +1,37 @@
+package com.ticketbooking.model;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+@Entity
+@Table(name = "location")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = false)
+public class Location {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+     Long id;
+
+    @Column(nullable = false)
+     String address;
+
+     String ward;
+     String district;
+
+    @ManyToOne
+    @JoinColumn(name = "province_id")
+     Province province;
+
+    @Transient
+    public String getName() {
+        return this.address + (ward != null ? ", " + this.ward : "") +
+                (district != null ? ", " + this.district : "") +
+                (province != null ? ", " + this.province.getName() : "");
+    }
+}

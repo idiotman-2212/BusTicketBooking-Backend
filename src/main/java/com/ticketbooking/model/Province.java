@@ -1,11 +1,11 @@
 package com.ticketbooking.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.List;
 
 @Entity
 @Data
@@ -17,17 +17,9 @@ public class Province {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     Long id;
+    Long id;
 
-     String name; // eg: 'Ninh Thuận'
+    String name; // eg: 'Ninh Thuận'
 
-     String codeName; // eg: 'ninh_thuan'
-
-    @OneToMany(mappedBy = "source")
-    @JsonIgnore
-     List<Trip> sourceTrips;
-
-    @OneToMany(mappedBy = "destination")
-    @JsonIgnore
-     List<Trip> destTrips;
+    String codeName; // eg: 'ninh_thuan'
 }
