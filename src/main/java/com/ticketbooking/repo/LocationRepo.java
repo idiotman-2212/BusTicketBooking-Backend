@@ -11,5 +11,8 @@ public interface LocationRepo extends JpaRepository<Location, Long> {
     List<Location> findAllByProvinceId(Long provinceId);
 
     List<Location> findByProvinceId(Long provinceId);
+
+    List<Location> findAllByIsActiveFalse();
+    List<Location> findAllByProvince_IdAndIsActiveFalse(Long provinceId);
 }
 

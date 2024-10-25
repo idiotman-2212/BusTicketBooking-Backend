@@ -3,6 +3,7 @@ package com.ticketbooking.controller;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.model.TripLog;
 import com.ticketbooking.service.TripLogService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/tripLogs")
 @RequiredArgsConstructor
+@Tag(name = "Trip Log Controller")
 public class TripLogController {
     private final TripLogService tripLogService;
 

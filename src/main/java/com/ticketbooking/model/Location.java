@@ -24,6 +24,9 @@ public class Location {
      String ward;
      String district;
 
+    @Column(name = "is_active", nullable = false, columnDefinition = "boolean default false")
+    Boolean isActive = true;
+
     @ManyToOne
     @JoinColumn(name = "province_id")
      Province province;

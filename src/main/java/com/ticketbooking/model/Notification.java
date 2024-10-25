@@ -24,6 +24,8 @@ public class  Notification {
      Long id;
 
     String title;
+
+    @Column(columnDefinition = "TEXT")
     String message;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

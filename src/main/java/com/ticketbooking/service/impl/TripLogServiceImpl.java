@@ -6,6 +6,7 @@ import com.ticketbooking.model.TripLog;
 import com.ticketbooking.repo.TripLogRepo;
 import com.ticketbooking.service.TripLogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +45,7 @@ public class TripLogServiceImpl implements TripLogService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tripLogs_paging", allEntries = true)
     public TripLog save(TripLog tripLog) {
         String currentUsername = getCurrentUsername();
         if (tripLog.getCreatedBy() == null) {
@@ -59,6 +61,7 @@ public class TripLogServiceImpl implements TripLogService {
 
 
     @Override
+    @CacheEvict(cacheNames = "tripLogs_paging", allEntries = true)
     public TripLog update(TripLog tripLog) {
         String currentUsername = getCurrentUsername();
         if (tripLog.getCreatedBy() == null) {
@@ -72,6 +75,7 @@ public class TripLogServiceImpl implements TripLogService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "tripLogs_paging", allEntries = true)
     public String delete(Long id) {
         if (tripLogRepo.existsById(id)) {
             tripLogRepo.deleteById(id);
