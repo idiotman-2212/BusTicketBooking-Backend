@@ -55,7 +55,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     public List<Location> findByProvinceId(Long provinceId) {
-        return locationRepo.findAllByProvince_IdAndIsActiveFalse(provinceId);
+        return locationRepo.findAllByProvince_IdAndIsActiveTrue(provinceId);
     }
 
     @Override
