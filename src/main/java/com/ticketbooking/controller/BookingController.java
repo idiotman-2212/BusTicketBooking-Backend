@@ -48,6 +48,13 @@ public class BookingController {
                 .body(bookingService.findById(bookingId));
     }
 
+    @GetMapping("/cargos/{bookingId}")
+    public ResponseEntity<?> getBookingWithCargos(@PathVariable Long bookingId) {
+        return ResponseEntity
+                .status(200)
+                .body(bookingService.getBookingWithCargos(bookingId));
+    }
+
     @GetMapping("/emptySeats")
     public List<Booking> getAllBookingFromTripAndDate(@RequestParam Long tripId) {
         return bookingService.getAllBookingFromTripAndDate(tripId);

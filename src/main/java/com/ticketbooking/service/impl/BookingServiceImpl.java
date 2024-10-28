@@ -67,6 +67,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
+    public Booking getBookingWithCargos(Long bookingId) {
+        return bookingRepo.findByIdWithCargos(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+    }
+
+    @Override
     @Cacheable(cacheNames = {"bookings"})
     public List<Booking> findAll() {
         return bookingRepo.findAll();
