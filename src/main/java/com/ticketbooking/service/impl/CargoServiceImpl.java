@@ -1,8 +1,10 @@
 package com.ticketbooking.service.impl;
 
 import com.ticketbooking.dto.PageResponse;
+import com.ticketbooking.exception.ExistingResourceException;
 import com.ticketbooking.exception.ResourceNotFoundException;
 import com.ticketbooking.model.Cargo;
+import com.ticketbooking.model.Driver;
 import com.ticketbooking.repo.CargoRepo;
 import com.ticketbooking.repo.UtilRepo;
 import com.ticketbooking.service.CargoService;
@@ -27,7 +29,7 @@ public class CargoServiceImpl implements CargoService {
     @Override
     @Transactional
     public List<Cargo> findAll() {
-        return cargoRepo.findAllByIsDeletedFalse();
+        return cargoRepo.findAll();
     }
 
     @Override
@@ -52,10 +54,10 @@ public class CargoServiceImpl implements CargoService {
     @Transactional
     @CacheEvict(cacheNames = {"cargos", "cargos_paging"}, allEntries = true)
     public Cargo save(Cargo cargo) {
-//        objectValidator.validate(cargo);
-//        if(!checkDuplicateDiscountInfo("ADD", cargo.getId(), "name", cargo.getName())){
-//            throw new ResourceNotFoundException("Cargo Name <%s> is already exist".formatted(cargo.getName()));
-//        }
+        objectValidator.validate(cargo);
+        if(!checkDuplicateDiscountInfo("ADD", cargo.getId(), "name", cargo.getName())){
+            throw new ResourceNotFoundException("Cargo Name <%s> is already exist".formatted(cargo.getName()));
+        }
         return cargoRepo.save(cargo);
     }
 
@@ -63,10 +65,10 @@ public class CargoServiceImpl implements CargoService {
     @Transactional
     @CacheEvict(cacheNames = {"cargos", "cargos_paging"}, allEntries = true)
     public Cargo update(Cargo cargo) {
-//        objectValidator.validate(cargo);
-//        if(!checkDuplicateDiscountInfo("EDIT", cargo.getId(), "name", cargo.getName())){
-//            throw new ResourceNotFoundException("Cargo Name <%s> is already exist".formatted(cargo.getName()));
-//        }
+        objectValidator.validate(cargo);
+        if(!checkDuplicateDiscountInfo("EDIT", cargo.getId(), "name", cargo.getName())){
+            throw new ResourceNotFoundException("Cargo Name <%s> is already exist".formatted(cargo.getName()));
+        }
         return cargoRepo.save(cargo);
     }
 
@@ -74,10 +76,15 @@ public class CargoServiceImpl implements CargoService {
     @Transactional
     @CacheEvict(cacheNames = {"cargos", "cargos_paging"}, allEntries = true)
     public String deleteById(Long id) {
-        Cargo cargo = cargoRepo.findById(id).orElseThrow(()-> new ResourceNotFoundException("Cargo not found"));
-        cargo.setIsDeleted(true);
-        cargoRepo.save(cargo);
-        return "Cargo has been marked as deleted";
+        Cargo foundCargo = findById(id);
+
+        if (!foundCargo.getBookingCargos().isEmpty()) {
+            throw new ExistingResourceException("Cargo <%d> has been using some bookings, can't be deleted".formatted(id));
+        }
+
+        cargoRepo.deleteById(id);
+
+        return "Delete Cargo <%d> successfully".formatted(id);
     }
 
     @Override

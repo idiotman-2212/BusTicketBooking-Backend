@@ -10,6 +10,7 @@ import com.ticketbooking.service.LocationService;
 import com.ticketbooking.validator.ObjectValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -60,43 +61,46 @@ public class LocationServiceImpl implements LocationService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {"locations", "locations_paging"}, allEntries = true)
     public Location saveLocation(Location location) {
         objectValidator.validate(location);
         if (!checkDuplicateLocationInfo("ADD", location.getId(), "address", location.getAddress())) {
             throw new ExistingResourceException("Location address <%s> is already exist".formatted(location.getAddress()));
         }
 
-        if (!checkDuplicateLocationInfo("ADD", location.getId(), "district", location.getDistrict())) {
-            throw new ExistingResourceException("Location district <%s> is already exist".formatted(location.getDistrict()));
-        }
-
-        if (!checkDuplicateLocationInfo("ADD", location.getId(), "ward", location.getWard())) {
-            throw new ExistingResourceException("Location ward <%s> is already exist".formatted(location.getWard()));
-        }
+//        if (!checkDuplicateLocationInfo("ADD", location.getId(), "district", location.getDistrict())) {
+//            throw new ExistingResourceException("Location district <%s> is already exist".formatted(location.getDistrict()));
+//        }
+//
+//        if (!checkDuplicateLocationInfo("ADD", location.getId(), "ward", location.getWard())) {
+//            throw new ExistingResourceException("Location ward <%s> is already exist".formatted(location.getWard()));
+//        }
 
         return locationRepo.save(location);
     }
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {"locations", "locations_paging"}, allEntries = true)
     public Location updateLocation( Location location) {
         objectValidator.validate(location);
         if (!checkDuplicateLocationInfo("EDIT", location.getId(), "address", location.getAddress())) {
             throw new ExistingResourceException("Location address <%s> is already exist".formatted(location.getAddress()));
         }
 
-        if (!checkDuplicateLocationInfo("EDIT", location.getId(), "district", location.getDistrict())) {
-            throw new ExistingResourceException("Location district <%s> is already exist".formatted(location.getDistrict()));
-        }
-
-        if (!checkDuplicateLocationInfo("EDIT", location.getId(), "ward", location.getWard())) {
-            throw new ExistingResourceException("Location ward <%s> is already exist".formatted(location.getWard()));
-        }
+//        if (!checkDuplicateLocationInfo("EDIT", location.getId(), "district", location.getDistrict())) {
+//            throw new ExistingResourceException("Location district <%s> is already exist".formatted(location.getDistrict()));
+//        }
+//
+//        if (!checkDuplicateLocationInfo("EDIT", location.getId(), "ward", location.getWard())) {
+//            throw new ExistingResourceException("Location ward <%s> is already exist".formatted(location.getWard()));
+//        }
         return locationRepo.save(location);
     }
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {"locations", "locations_paging"}, allEntries = true)
     public String deleteLocation(Long id) {
         Location foundLocation = findById(id);
 

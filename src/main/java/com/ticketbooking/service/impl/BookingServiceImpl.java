@@ -202,6 +202,10 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @CacheEvict(cacheNames = {"bookings", "bookings_paging"}, allEntries = true)
     public List<Booking> saveForWalkInCustomer(BookingRequest bookingRequest) {
+        // Kiểm tra dữ liệu đầu vào
+        if (bookingRequest.getTrip() == null || bookingRequest.getSeatNumber() == null) {
+            throw new BookingException("Dữ liệu không hợp lệ.");
+        }
         String[] selectSeats = bookingRequest.getSeatNumber();
         BigDecimal totalPaymentPerSeat = bookingRequest.getTotalPayment()
                 .divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP);

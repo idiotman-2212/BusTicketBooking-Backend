@@ -1,6 +1,7 @@
 package com.ticketbooking.service.impl;
 
 import com.ticketbooking.dto.PageResponse;
+import com.ticketbooking.exception.ExistingResourceException;
 import com.ticketbooking.model.User;
 import com.ticketbooking.model.TripLog;
 import com.ticketbooking.repo.TripLogRepo;
@@ -77,11 +78,18 @@ public class TripLogServiceImpl implements TripLogService {
     @Override
     @CacheEvict(cacheNames = "tripLogs_paging", allEntries = true)
     public String delete(Long id) {
-        if (tripLogRepo.existsById(id)) {
-            tripLogRepo.deleteById(id);
-            return "Trip Log with ID: " + id + " has been deleted.";
+        TripLog foundTripLogs = findById(id);
+        if (!foundTripLogs.getTrip().getBookings().isEmpty()) {
+            throw new ExistingResourceException("Trip<%d> is in used, can't be deleted".formatted(id));
         }
-        return "Not found Trip Log with ID: " + id;
+        tripLogRepo.deleteById(id);
+        return "Delete Trip Log <%d> successfully".formatted(id);
+
+//        if (tripLogRepo.existsById(id)) {
+//            tripLogRepo.deleteById(id);
+//            return "Trip Log with ID: " + id + " has been deleted.";
+//        }
+//        return "Not found Trip Log with ID: " + id;
     }
 
     @Override

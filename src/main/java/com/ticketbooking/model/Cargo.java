@@ -29,8 +29,6 @@ public class Cargo {
     @Column(nullable = false)
      BigDecimal basePrice;
 
-    Boolean isDeleted = false;
-
     @OneToMany(mappedBy = "cargo")
     @JsonIgnore
     List<BookingCargo> bookingCargos;

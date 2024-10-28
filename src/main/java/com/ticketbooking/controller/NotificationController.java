@@ -85,8 +85,6 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
-
-
     // Admin gửi thông báo
     @PostMapping("/send")
     public ResponseEntity<?> sendNotification(@RequestBody NotificationRequest request) {
@@ -102,7 +100,7 @@ public class NotificationController {
         return ResponseEntity.ok("Notification updated successfully.");
     }
 
-    @DeleteMapping("/{notificationId}")
+    @DeleteMapping("/user/{notificationId}")
     public ResponseEntity<?> softDeleteNotification(@PathVariable Long notificationId, Authentication authentication) {
         String username = authentication.getName();
         notificationService.softDeleteNotification(notificationId, username);
@@ -115,4 +113,9 @@ public class NotificationController {
         return ResponseEntity.ok("All notifications deleted successfully.");
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotificationById(@PathVariable Long id){
+        notificationService.deleteNotificationById(id);
+        return ResponseEntity.ok("Delete notification deleted successfully.");
+    }
 }

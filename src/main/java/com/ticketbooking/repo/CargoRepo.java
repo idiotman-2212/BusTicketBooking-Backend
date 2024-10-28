@@ -8,5 +8,4 @@ import java.util.List;
 
 @Repository
 public interface CargoRepo extends JpaRepository<Cargo, Long> {
-    List<Cargo> findAllByIsDeletedFalse();
 }
