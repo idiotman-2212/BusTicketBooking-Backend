@@ -38,7 +38,8 @@ public class ScheduleJobService {
 
         for (Booking booking : unpaidBookings) {
             System.out.println("Unpaid booking ID: " + booking.getId() + " | Departure Time: " + booking.getTrip().getDepartureDateTime());
-            String message = "Vé đặt của quý khách chưa được thanh toán. Vui lòng thanh toán trước 24 giờ khởi hành.";
+            String passengerName = booking.getCustFirstName() + " " + booking.getCustLastName();
+            String message = String.format("Kính chào %s,\nVé đặt của quý khách chưa được thanh toán. Vui lòng thanh toán trước 24 giờ khởi hành.", passengerName);
             sendNotificationAndMessages(booking, "Nhắc nhở thanh toán", message);
         }
     }
@@ -63,7 +64,8 @@ public class ScheduleJobService {
                     .booking(booking)
                     .build());
 
-            String message = "Vé của quý khách đã bị hủy do không thanh toán trước 24 giờ khởi hành.";
+            String passengerName = booking.getCustFirstName() + " " + booking.getCustLastName();
+            String message = String.format("Kính chào %s,\nVé của quý khách đã bị hủy do không thanh toán trước 24 giờ khởi hành.", passengerName);
             sendNotificationAndMessages(booking, "Vé đặt đã bị hủy", message);
         }
     }
@@ -76,7 +78,9 @@ public class ScheduleJobService {
         List<Booking> paidBookings = bookingRepo.findPaidBookingsBefore(reminderThreshold);
 
         for (Booking booking : paidBookings) {
-            String message = "Chuyến xe của quý khách sẽ khởi hành vào " + booking.getTrip().getDepartureDateTime();
+            String passengerName = booking.getCustFirstName() + " " + booking.getCustLastName();
+            String departureTime = booking.getTrip().getDepartureDateTime().toString();
+            String message = String.format("Kính chào %s,\nChuyến xe của quý khách sẽ khởi hành vào %s.", passengerName, departureTime);
             sendNotificationAndMessages(booking, "Nhắc nhở khởi hành", message);
         }
     }
