@@ -87,7 +87,6 @@ public class ScheduleJobService {
 
     // Phương thức chung để gửi thông báo, SMS và email
     private void sendNotificationAndMessages(Booking booking, String title, String message) {
-        // Kiểm tra nếu người dùng không tồn tại
         if (booking.getUser() == null) {
             System.out.println("Booking ID " + booking.getId() + " không có người dùng gắn liền, không thể gửi thông báo.");
             return;

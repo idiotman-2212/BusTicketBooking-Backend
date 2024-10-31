@@ -25,13 +25,11 @@ public class TripLogServiceImpl implements TripLogService {
     private final TripLogRepo tripLogRepo;
 
     @Override
-    @Cacheable(cacheNames = "tripLogs")
     public List<TripLog> findAll() {
         return tripLogRepo.findAll();
     }
 
     @Override
-    @Cacheable(cacheNames = "tripLogById", key = "#id")
     public TripLog findById(Long id) {
         return tripLogRepo.findById(id).orElse(null);
     }
@@ -48,7 +46,7 @@ public class TripLogServiceImpl implements TripLogService {
     }
 
     @Override
-    @CacheEvict(cacheNames = {"tripLogs", "tripLogs_paging", "tripLogById"}, allEntries = true)
+    @CacheEvict(cacheNames = "tripLogs_paging", allEntries = true)
     public TripLog save(TripLog tripLog) {
         String currentUsername = getCurrentUsername();
         if (tripLog.getCreatedBy() == null) {
@@ -64,7 +62,7 @@ public class TripLogServiceImpl implements TripLogService {
 
 
     @Override
-    @CacheEvict(cacheNames = {"tripLogs", "tripLogs_paging", "tripLogById"}, allEntries = true)
+    @CacheEvict(cacheNames = "tripLogs_paging", allEntries = true)
     public TripLog update(TripLog tripLog) {
         String currentUsername = getCurrentUsername();
         if (tripLog.getCreatedBy() == null) {

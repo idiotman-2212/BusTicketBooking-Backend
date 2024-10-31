@@ -38,14 +38,12 @@ public class TripServiceImpl implements TripService {
     private final NotificationRepo notificationRepo;
 
     @Override
-    @Cacheable(cacheNames = "tripById", key = "#id")
     public Trip findById(Long id) {
         return tripRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found Trip<%d>".formatted(id)));
     }
 
     @Override
-    @Cacheable(cacheNames = {"trips"})
     public List<Trip> findAll() {
         return tripRepo.findAll();
     }
@@ -62,14 +60,12 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
-    @Cacheable(cacheNames = "incompleteTrips")
     public List<Trip> getIncompleteTrips() {
         return tripRepo.findByCompletedFalse();
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"tripById", "incompleteTrips", "trips"}, key = "#tripId")
     public void completeTrip(Long tripId) {
 
         Trip trip = tripRepo.findById(tripId)
@@ -173,7 +169,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"trips", "trips_paging", "tripById", "incompleteTrips"}, allEntries = true)
+    @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
     public Trip save(Trip trip) {
 
         // Kiểm tra địa điểm đón và trả không được trùng
@@ -229,7 +225,7 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"trips", "trips_paging", "tripById", "incompleteTrips"}, allEntries = true)
+    @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
     public Trip update(Trip trip) {
         Trip existingTrip = findById(trip.getId());
 
@@ -268,7 +264,7 @@ public class TripServiceImpl implements TripService {
 
 
     @Override
-    @CacheEvict(cacheNames = {"trips", "trips_paging", "tripById", "incompleteTrips"}, allEntries = true)
+    @CacheEvict(cacheNames = {"trips", "trips_paging"}, allEntries = true)
     public String delete(Long id) {
 
         Trip foundTrip = findById(id);
@@ -283,7 +279,6 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
-    @Cacheable(cacheNames = "tripsBySourceAndDest", key = "{#sourceId, #destId, #chosenFromDate, #chosenToDate}")
     public List<Trip> findAllBySourceAndDest(Long sourceId, Long destId, String chosenFromDate, String chosenToDate) {
         LocalDate fromDate = LocalDate.parse(chosenFromDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         LocalDate toDate = LocalDate.parse(chosenToDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -291,7 +286,6 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
-    @Cacheable(cacheNames = "recentTripsByDriverId", key = "{#driverId, #fromDateTime, #toDateTime}")
     public List<Trip> findRecentTripsByDriverId(Long driverId, String fromDateTime, String toDateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime fromDateTimeParsed = LocalDateTime.parse(fromDateTime, formatter);
@@ -301,7 +295,6 @@ public class TripServiceImpl implements TripService {
 
     // Phương thức tự động cập nhật trạng thái completed cho các chuyến đi chưa hoàn thành
     @Scheduled(fixedRate = 3600000)
-    @CacheEvict(cacheNames = "incompleteTrips", allEntries = true)
     public void updateCompletedTrips() {
         List<Trip> incompleteTrips = tripRepo.findByCompletedFalse();
 

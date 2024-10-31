@@ -195,6 +195,31 @@ public class BookingServiceImpl implements BookingService {
             loyaltyTransactionRepo.save(useTransaction);
         }
 
+        // After saving the bookings
+        for (Booking savedBooking : savedBookings) {
+            // Prepare email details
+            String source = savedBooking.getTrip().getSource().getName();
+            String destination = savedBooking.getTrip().getDestination().getName();
+            String busInfo = savedBooking.getTrip().getCoach().getName();
+            String departureTime = savedBooking.getTrip().getDepartureDateTime().toString();
+            String seatNumbers = savedBookings.stream()
+                    .map(Booking::getSeatNumber)
+                    .collect(Collectors.joining(", "));
+            BigDecimal totalPayment = savedBooking.getTotalPayment();
+
+            // Send confirmation email
+            notificationService.sendEmailConfirmation(
+                    savedBooking.getEmail(),
+                    source,
+                    destination,
+                    busInfo,                         
+                    departureTime,
+                    seatNumbers,
+                    totalPayment
+            );
+        }
+
+
         return savedBookings;
     }
 

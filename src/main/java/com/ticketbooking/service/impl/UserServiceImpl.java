@@ -46,14 +46,12 @@ public class UserServiceImpl implements UserService {
     private final RoleRepo roleRepo;
 
     @Override
-    @Cacheable(cacheNames = "userByUsername", key = "#username")
     public User findByUsername(String username) {
         return userRepo.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Not found User<%s>".formatted(username)));
     }
 
     @Override
-    @Cacheable(cacheNames = {"users"})
     public List<User> findAll() {
         return userRepo.findAll();
     }
@@ -71,7 +69,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"users", "users_paging", "userByUsername"}, allEntries = true, key = "#user.username")
+    @CacheEvict(cacheNames = {"users", "users_paging"}, allEntries = true)
     public User save(User user) {
         /*
          * Double check
@@ -113,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"users", "users_paging", "userByUsername"}, allEntries = true, key = "#user.username")
+    @CacheEvict(cacheNames = {"users", "users_paging"}, allEntries = true)
     public User update(User user) {
         /*
          * Double check
@@ -134,7 +132,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"users", "users_paging", "userByUsername"}, key = "#username")
+    @CacheEvict(cacheNames = {"users", "users_paging"}, allEntries = true)
     public String delete(String username) {
 
         User foundUser = findByUsername(username);
@@ -155,7 +153,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Cacheable(cacheNames = "userPermissions", key = "#username")
     public PermissionDto getUserPermission(String username) {
         var user = userRepo.findByUsername(username).get();
         List<UserPermission> permissionsResult = permissionRepo.findAllByUser(user);
@@ -167,7 +164,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "userPermissions", key = "#screenPermissionDto.username")
     public PermissionDto updateUserScreenPermission(ScreenPermissionDto screenPermissionDto) {
         User user = userRepo.findByUsername(screenPermissionDto.getUsername()).get();
 

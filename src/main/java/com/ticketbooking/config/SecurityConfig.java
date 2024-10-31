@@ -63,7 +63,8 @@ public class SecurityConfig {
                                 "http://localhost:3000",
                                 "http://localhost:3001",
                                 "http://chauhuydien.id.vn/admin",
-                                "http://chauhuydien.id.vn"
+                                "http://chauhuydien.id.vn",
+                                "https://bus-ticket-booking-customer-six.vercel.app"
                         )
                         .allowedMethods("*");
             }
@@ -87,7 +88,9 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:8080",
                 "http://localhost:3001",
-                "http://chauhuydien.id.vn"
+                "http://chauhuydien.id.vn",
+                "https://bus-ticket-booking-customer-six.vercel.app",
+                "https://bus-ticket-booking-admin-zx3p.vercel.app"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
