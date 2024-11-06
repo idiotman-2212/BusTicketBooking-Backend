@@ -72,8 +72,8 @@ public class Booking {
     List<PaymentHistory> paymentHistories;
 
 
-    @Column(name = "points_earned", nullable = false, columnDefinition = "decimal(38,2) default 0")
-    BigDecimal pointsEarned;
+    @Column(name = "points_earned", columnDefinition = "decimal(38,2) default 0")
+    BigDecimal pointsEarned = BigDecimal.ZERO;
 
     @Column(name = "points_used", columnDefinition = "decimal(38,2) default 0")
     BigDecimal pointsUsed;

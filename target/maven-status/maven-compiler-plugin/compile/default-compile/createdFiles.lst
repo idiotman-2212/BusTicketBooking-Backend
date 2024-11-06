@@ -64,7 +64,6 @@ com\ticketbooking\service\impl\BookingCargoServiceImpl.class
 com\ticketbooking\service\impl\DiscountServiceImpl.class
 com\ticketbooking\repo\LoyaltyTransactionRepo.class
 com\ticketbooking\config\WebSocketConfig.class
-com\ticketbooking\service\SmsService.class
 com\ticketbooking\repo\TokenRepo.class
 com\ticketbooking\controller\TripController.class
 com\ticketbooking\service\DiscountService.class
@@ -72,7 +71,6 @@ com\ticketbooking\dto\EmailMessage$EmailMessageBuilder.class
 com\ticketbooking\repo\BookingCargoRepo.class
 com\ticketbooking\service\LocationService.class
 com\ticketbooking\controller\ProvinceController.class
-com\ticketbooking\service\ScheduleJobService.class
 com\ticketbooking\config\swagger\OpenApiConfig.class
 com\ticketbooking\exception\BookingException.class
 com\ticketbooking\repo\ReportRepo.class

@@ -3,7 +3,9 @@ package com.ticketbooking.repo;
 import com.ticketbooking.model.Booking;
 import com.ticketbooking.model.Trip;
 import com.ticketbooking.model.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -47,4 +49,9 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
             "WHERE b.id = :bookingId " +
             "AND bc.quantity > 0")
     Optional<Booking> findByIdWithCargos(@Param("bookingId") Long bookingId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Booking b WHERE b.trip.id = :tripId AND b.seatNumber = :seatNumber")
+    Optional<Booking> findBookingByTripIdAndSeatNumberWithLock(@Param("tripId") Long tripId,
+                                                               @Param("seatNumber") String seatNumber);
 }

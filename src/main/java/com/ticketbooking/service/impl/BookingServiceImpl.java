@@ -12,7 +12,6 @@ import com.ticketbooking.model.enumType.TransactionType;
 import com.ticketbooking.repo.*;
 import com.ticketbooking.service.BookingService;
 import com.ticketbooking.service.NotificationService;
-import com.ticketbooking.service.SmsService;
 import com.ticketbooking.validator.ObjectValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +38,6 @@ public class BookingServiceImpl implements BookingService {
     private final ObjectValidator<Booking> objectValidator;
     private final UserRepo userRepo;
     private final LoyaltyTransactionRepo loyaltyTransactionRepo;
-    private final SmsService smsService;
     private final NotificationService notificationService;
     private final CargoRepo cargoRepo;
     private final BookingCargoRepo bookingCargoRepo;
@@ -123,6 +118,13 @@ public class BookingServiceImpl implements BookingService {
 
         List<Booking> orderedBookings = new ArrayList<>();
         for (String seat : selectSeats) {
+            // Kiểm tra nếu ghế đã được đặt bởi giao dịch khác
+            Optional<Booking> existingBooking = bookingRepo.findBookingByTripIdAndSeatNumberWithLock(
+                    bookingRequest.getTrip().getId(), seat);
+
+            if (existingBooking.isPresent()) {
+                throw new BookingException("Chỗ ngồi " + seat + " đã được đặt, vui lòng chọn chỗ khác.");
+            }
             Booking booking = Booking.builder()
                     .user(user)
                     .trip(bookingRequest.getTrip())
@@ -260,6 +262,13 @@ public class BookingServiceImpl implements BookingService {
             // Calculate total payment for this seat including ticket price and cargo share
             BigDecimal seatTotalPayment = ticketPricePerSeat.add(cargoPricePerSeat);
 
+            Optional<Booking> existingBooking = bookingRepo.findBookingByTripIdAndSeatNumberWithLock(
+                    bookingRequest.getTrip().getId(), seat);
+
+            if (existingBooking.isPresent()) {
+                throw new BookingException("Chỗ ngồi " + seat + " đã được đặt, vui lòng chọn chỗ khác.");
+            }
+
             Booking booking = Booking.builder()
                     .trip(bookingRequest.getTrip())
                     .bookingDateTime(bookingRequest.getBookingDateTime())
@@ -329,6 +338,25 @@ public class BookingServiceImpl implements BookingService {
         if (oldPaymentStatus.equals(newPaymentStatus)) {
             return booking;
         }
+// Chuyển từ CANCEL sang REFUNDED chỉ khi thanh toán bằng thẻ (CARD)
+        if (oldPaymentStatus == PaymentStatus.CANCEL && newPaymentStatus == PaymentStatus.REFUNDED) {
+            if (foundBooking.getPaymentMethod() != PaymentMethod.CARD) {
+                throw new BookingException("Only bookings paid by CARD can be refunded.");
+            }
+        }
+
+        // Chuyển từ UNPAID sang PAID khi thanh toán tại quầy
+        if (oldPaymentStatus == PaymentStatus.UNPAID && newPaymentStatus == PaymentStatus.PAID) {
+            // Allow update from UNPAID to PAID
+        } else if (oldPaymentStatus == PaymentStatus.CANCEL && newPaymentStatus == PaymentStatus.REFUNDED) {
+            if (foundBooking.getPaymentMethod() != PaymentMethod.CARD) {
+                throw new BookingException("Only bookings paid by CARD can be refunded.");
+            }
+            // Allow update from CANCEL to REFUNDED for CARD payments
+        } else if (!oldPaymentStatus.equals(newPaymentStatus)) {
+            throw new BookingException("Invalid status transition.");
+        }
+
 
         paymentHistoryRepo.save(PaymentHistory
                 .builder()
@@ -385,9 +413,9 @@ public class BookingServiceImpl implements BookingService {
         String cancelResult = cancelBooking(foundBooking, oldPaymentStatus, currentTime);
 
         // Xử lý hoàn tiền nếu cần
-        if (oldPaymentStatus == PaymentStatus.PAID && foundBooking.getPaymentMethod() == PaymentMethod.CARD) {
-            return refundBooking(foundBooking, currentTime);
-        }
+//        if (oldPaymentStatus == PaymentStatus.PAID && foundBooking.getPaymentMethod() == PaymentMethod.CARD) {
+//            return refundBooking(foundBooking, currentTime);
+//        }
 
         return cancelResult;
     }

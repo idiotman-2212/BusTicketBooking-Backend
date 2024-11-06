@@ -5,7 +5,9 @@ import com.ticketbooking.dto.NotificationDTO;
 import com.ticketbooking.dto.NotificationRequest;
 import com.ticketbooking.dto.PageResponse;
 import com.ticketbooking.exception.ResourceNotFoundException;
-import com.ticketbooking.model.*;
+import com.ticketbooking.model.Notification;
+import com.ticketbooking.model.User;
+import com.ticketbooking.model.UserNotification;
 import com.ticketbooking.model.enumType.RecipientType;
 import com.ticketbooking.repo.NotificationRepo;
 import com.ticketbooking.repo.TripRepo;
@@ -13,7 +15,6 @@ import com.ticketbooking.repo.UserNotificationRepo;
 import com.ticketbooking.repo.UserRepo;
 import com.ticketbooking.service.MailService;
 import com.ticketbooking.service.NotificationService;
-import com.ticketbooking.service.SmsService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,7 +22,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private final SmsService smsService;
     private final MailService mailService;
     private final Environment env;
     private final NotificationRepo notificationRepo;
@@ -47,27 +46,27 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserRepo userRepo;
     private final TripRepo tripRepo;
 
-    @Override
-    public void sendSmsConfirmation(String phoneNumber, String source, String destination, String busInfo, String departureTime, String seatNumbers, BigDecimal totalPayment) {
-        String message = String.format(
-                "THÔNG TIN VÉ ĐẶT\n" +
-                        "Tuyến: %s => %s\n" +
-                        "Xe: %s\n" +
-                        "Ngày đi: %s\n" +
-                        "Ghế: %s\n" +
-                        "Giá vé: %s",
-                source, destination, busInfo, departureTime, seatNumbers,
-                NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(totalPayment)
-        );
-
-        // Chuyển đổi số điện thoại
-        if (phoneNumber != null && phoneNumber.startsWith("0")) {
-            phoneNumber = "+84" + phoneNumber.substring(1);
-        }
-
-        // Gửi SMS tới số điện thoại khách hàng
-        smsService.sendSms(phoneNumber, message);
-    }
+//    @Override
+//    public void sendSmsConfirmation(String phoneNumber, String source, String destination, String busInfo, String departureTime, String seatNumbers, BigDecimal totalPayment) {
+//        String message = String.format(
+//                "THÔNG TIN VÉ ĐẶT\n" +
+//                        "Tuyến: %s => %s\n" +
+//                        "Xe: %s\n" +
+//                        "Ngày đi: %s\n" +
+//                        "Ghế: %s\n" +
+//                        "Giá vé: %s",
+//                source, destination, busInfo, departureTime, seatNumbers,
+//                NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(totalPayment)
+//        );
+//
+//        // Chuyển đổi số điện thoại
+//        if (phoneNumber != null && phoneNumber.startsWith("0")) {
+//            phoneNumber = "+84" + phoneNumber.substring(1);
+//        }
+//
+//        // Gửi SMS tới số điện thoại khách hàng
+//        smsService.sendSms(phoneNumber, message);
+//    }
 
     @Override
     public void sendEmailConfirmation(String email, String source, String destination, String busInfo, String departureTime, String seatNumbers, BigDecimal totalPayment) {
@@ -188,6 +187,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
     public List<NotificationDTO> getRecentNotificationsForUser(String username) {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
         List<UserNotification> recentNotifications = userNotificationRepo.findRecentByUserAndNotDeleted(username, sevenDaysAgo);
@@ -213,6 +214,8 @@ public class NotificationServiceImpl implements NotificationService {
 
     // Lấy danh sách thông báo của người dùng
     @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
     public List<NotificationDTO> getAllNotificationsForUser(String username) {
         List<UserNotification> userNotifications = userNotificationRepo.findByUser_UsernameAndNotDeleted(username);
         return userNotifications.stream()
@@ -222,6 +225,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
     public long getUnreadNotificationCount(String username) {
         return userNotificationRepo.countUnreadNotifications(username);
     }
@@ -319,11 +324,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(cacheNames = {"notifications_paging"}, allEntries = true)
     public List<UserNotification> getRecentNotifications(String username) {
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
         return userNotificationRepo.findByUser_UsernameAndNotification_SendDateTimeAfter(username, sevenDaysAgo);
     }
-
 
     public String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
