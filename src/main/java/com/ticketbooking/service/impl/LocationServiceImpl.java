@@ -5,6 +5,7 @@ import com.ticketbooking.exception.ExistingResourceException;
 import com.ticketbooking.exception.ResourceNotFoundException;
 import com.ticketbooking.model.Location;
 import com.ticketbooking.repo.LocationRepo;
+import com.ticketbooking.repo.TripRepo;
 import com.ticketbooking.repo.UtilRepo;
 import com.ticketbooking.service.LocationService;
 import com.ticketbooking.validator.ObjectValidator;
@@ -28,6 +29,8 @@ public class LocationServiceImpl implements LocationService {
     private final ObjectValidator<Location> objectValidator;
 
     private final UtilRepo utilRepo;
+
+    private final TripRepo tripRepo;
 
     @Override
     @Transactional
@@ -82,7 +85,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @Transactional
     @CacheEvict(cacheNames = {"locations", "locations_paging"}, allEntries = true)
-    public Location updateLocation( Location location) {
+    public Location updateLocation(Location location) {
         objectValidator.validate(location);
         if (!checkDuplicateLocationInfo("EDIT", location.getId(), "address", location.getAddress())) {
             throw new ExistingResourceException("Location address <%s> is already exist".formatted(location.getAddress()));
@@ -103,6 +106,12 @@ public class LocationServiceImpl implements LocationService {
     @CacheEvict(cacheNames = {"locations", "locations_paging"}, allEntries = true)
     public String deleteLocation(Long id) {
         Location foundLocation = findById(id);
+
+        boolean isLocationInUse = tripRepo.existsByLocationId(id);
+
+        if (isLocationInUse) {
+            throw new ExistingResourceException("Location <%d> is being used in trips, can't be delete.".formatted(id));
+        }
 
         foundLocation.setIsActive(false);
         locationRepo.save(foundLocation);

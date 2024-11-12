@@ -61,4 +61,6 @@ public interface TripRepo extends JpaRepository<Trip, Long> {
 
     List<Trip> findByCompletedFalse(); // Tìm các chuyến đi chưa hoàn thành
 
+    @Query("SELECT COUNT(t) > 0 FROM Trip t WHERE t.pickUpLocation.id = :locationId OR t.dropOffLocation.id = :locationId")
+    boolean existsByLocationId(@Param("locationId") Long locationId);
 }
