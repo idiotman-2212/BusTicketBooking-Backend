@@ -3,6 +3,7 @@ package com.ticketbooking.repo;
 import com.ticketbooking.model.Booking;
 import com.ticketbooking.model.Trip;
 import com.ticketbooking.model.User;
+import com.ticketbooking.model.enumType.PaymentStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -51,7 +52,10 @@ public interface BookingRepo extends JpaRepository<Booking, Long> {
     Optional<Booking> findByIdWithCargos(@Param("bookingId") Long bookingId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT b FROM Booking b WHERE b.trip.id = :tripId AND b.seatNumber = :seatNumber")
-    Optional<Booking> findBookingByTripIdAndSeatNumberWithLock(@Param("tripId") Long tripId,
-                                                               @Param("seatNumber") String seatNumber);
+    @Query("SELECT b FROM Booking b WHERE b.trip.id = :tripId AND b.seatNumber = :seatNumber AND b.paymentStatus NOT IN (:excludedStatuses)")
+    Optional<Booking> findBookingByTripIdAndSeatNumberWithLock(
+            @Param("tripId") Long tripId,
+            @Param("seatNumber") String seatNumber,
+            @Param("excludedStatuses") List<PaymentStatus> excludedStatuses);
+
 }

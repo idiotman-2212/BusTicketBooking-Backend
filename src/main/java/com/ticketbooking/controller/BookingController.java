@@ -80,7 +80,6 @@ public class BookingController {
         return ResponseEntity.status(201).body(savedBookings);
     }
 
-
     @PutMapping
     public ResponseEntity<Booking> updateTrip(@RequestBody Booking booking) {
         return ResponseEntity

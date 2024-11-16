@@ -69,7 +69,9 @@ public class NotificationServiceImpl implements NotificationService {
 //    }
 
     @Override
-    public void sendEmailConfirmation(String email, String source, String destination, String busInfo, String departureTime, String seatNumbers, BigDecimal totalPayment) {
+    public void sendEmailConfirmation(String email, String source, String destination, String busInfo,
+                                      String departureTime, String seatNumbers, BigDecimal totalPayment,
+                                      String pickUpLocation, String dropOffLocation) {
         String emailContent = String.format(
                 "Kính chào quý khách,\n\n" +
                         "Cảm ơn bạn đã đặt vé với chúng tôi. Dưới đây là thông tin chi tiết vé của bạn:\n\n" +
@@ -77,11 +79,14 @@ public class NotificationServiceImpl implements NotificationService {
                         "Xe: %s\n" +
                         "Ngày đi: %s\n" +
                         "Ghế: %s\n" +
+                        "Địa điểm đón: %s\n" +
+                        "Địa điểm trả: %s\n" +
                         "Giá vé: %s\n\n" +
                         "Chúng tôi hy vọng bạn sẽ có một chuyến đi vui vẻ.\n" +
                         "Trân trọng,\n" +
                         "Đội ngũ hỗ trợ khách hàng.",
                 source, destination, busInfo, departureTime, seatNumbers,
+                pickUpLocation, dropOffLocation,
                 NumberFormat.getCurrencyInstance(new Locale("vi", "VN")).format(totalPayment)
         );
 
@@ -97,6 +102,29 @@ public class NotificationServiceImpl implements NotificationService {
         mailService.send(emailMessage);
     }
 
+    @Override
+    public void sendRefundEmail(String email, String source, String destination, String busInfo,
+                                String departureTime, String seatNumbers, BigDecimal totalPayment,
+                                String pickUpLocation, String dropOffLocation) {
+        String subject = "Xác nhận hoàn tiền vé";
+        String body = String.format("Kính gửi Quý khách,\n\nChúng tôi xin thông báo rằng vé của quý khách đã được hoàn tiền thành công. Dưới đây là thông tin chi tiết:\n" +
+                        "Nơi đi: %s\nNơi đến: %s\nThông tin xe: %s\nThời gian khởi hành: %s\nSố ghế: %s\nĐịa điểm đón: %s\nĐịa điểm trả: %s\nTổng tiền hoàn lại: %s\n\nCảm ơn Quý khách đã sử dụng dịch vụ của chúng tôi!",
+                source, destination, busInfo, departureTime, seatNumbers,
+                pickUpLocation, dropOffLocation, totalPayment.toString());
+
+        EmailMessage emailMessage = EmailMessage.builder()
+                .from(env.getProperty("spring.mail.username"))
+                .to(email)
+                .subject(subject)
+                .text(body)
+                .build();
+        try {
+            mailService.send(emailMessage);
+            System.out.println("Email sent to " + email + " with subject: " + subject);
+        } catch (Exception e) {
+            System.err.println("Failed to send refund email: " + e.getMessage());
+        }
+    }
 
     @Override
     public List<Notification> findAll() {

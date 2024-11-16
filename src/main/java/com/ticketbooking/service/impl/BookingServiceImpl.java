@@ -50,7 +50,6 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    @Cacheable(cacheNames = {"bookings"}, key = "#username")
     public List<Booking> findAllByUsername(String username) {
         User foundUser = userRepo.findByUsername(username).get();
         return bookingRepo.findAllByUser(foundUser);
@@ -95,6 +94,7 @@ public class BookingServiceImpl implements BookingService {
         String[] selectSeats = bookingRequest.getSeatNumber();
         BigDecimal originalTotalPayment = bookingRequest.getTotalPayment();
         BigDecimal pointsUsed = bookingRequest.getPointsUsed();
+        List<PaymentStatus> excludedStatuses = Arrays.asList(PaymentStatus.CANCEL, PaymentStatus.REFUNDED);
 
         User user = userRepo.findByUsername(bookingRequest.getUser().getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -120,7 +120,7 @@ public class BookingServiceImpl implements BookingService {
         for (String seat : selectSeats) {
             // Kiểm tra nếu ghế đã được đặt bởi giao dịch khác
             Optional<Booking> existingBooking = bookingRepo.findBookingByTripIdAndSeatNumberWithLock(
-                    bookingRequest.getTrip().getId(), seat);
+                    bookingRequest.getTrip().getId(), seat, excludedStatuses);
 
             if (existingBooking.isPresent()) {
                 throw new BookingException("Chỗ ngồi " + seat + " đã được đặt, vui lòng chọn chỗ khác.");
@@ -159,7 +159,6 @@ public class BookingServiceImpl implements BookingService {
                 }
                 booking.setBookingCargos(bookingCargos);
             }
-
             BigDecimal finalTotalPayment = baseTicketPricePerSeat
                     .add(cargoPricePerSeat)
                     .subtract(pointsUsedPerSeat);
@@ -196,8 +195,6 @@ public class BookingServiceImpl implements BookingService {
                     .build();
             loyaltyTransactionRepo.save(useTransaction);
         }
-
-        // After saving the bookings
         for (Booking savedBooking : savedBookings) {
             // Prepare email details
             String source = savedBooking.getTrip().getSource().getName();
@@ -208,23 +205,24 @@ public class BookingServiceImpl implements BookingService {
                     .map(Booking::getSeatNumber)
                     .collect(Collectors.joining(", "));
             BigDecimal totalPayment = savedBooking.getTotalPayment();
+            String pickUpLocation = savedBooking.getTrip().getPickUpLocation().getName();
+            String dropOffLocation = savedBooking.getTrip().getDropOffLocation().getName();
 
-            // Send confirmation email
+            System.out.println("User: " + user.getUsername());
             notificationService.sendEmailConfirmation(
                     savedBooking.getEmail(),
                     source,
                     destination,
-                    busInfo,                         
+                    busInfo,
                     departureTime,
                     seatNumbers,
-                    totalPayment
+                    totalPayment,
+                    pickUpLocation,
+                    dropOffLocation
             );
         }
-
-
         return savedBookings;
     }
-
 
     //đặt vé site2 khách vãng lai
     @Override
@@ -235,7 +233,7 @@ public class BookingServiceImpl implements BookingService {
             throw new BookingException("Dữ liệu không hợp lệ.");
         }
         String[] selectSeats = bookingRequest.getSeatNumber();
-
+        List<PaymentStatus> excludedStatuses = Arrays.asList(PaymentStatus.CANCEL, PaymentStatus.REFUNDED);
         // Calculate total cargo price
         BigDecimal totalCargoPrice = BigDecimal.ZERO;
         Map<Long, BigDecimal> cargoPrices = new HashMap<>();
@@ -249,7 +247,6 @@ public class BookingServiceImpl implements BookingService {
                 cargoPrices.put(cargo.getId(), cargoPrice);
             }
         }
-
         // Calculate base ticket price per seat (không bao gồm cargo)
         BigDecimal baseTicketPrice = bookingRequest.getTotalPayment();
         BigDecimal ticketPricePerSeat = baseTicketPrice.divide(BigDecimal.valueOf(selectSeats.length), RoundingMode.HALF_UP);
@@ -263,12 +260,11 @@ public class BookingServiceImpl implements BookingService {
             BigDecimal seatTotalPayment = ticketPricePerSeat.add(cargoPricePerSeat);
 
             Optional<Booking> existingBooking = bookingRepo.findBookingByTripIdAndSeatNumberWithLock(
-                    bookingRequest.getTrip().getId(), seat);
+                    bookingRequest.getTrip().getId(), seat, excludedStatuses);
 
             if (existingBooking.isPresent()) {
                 throw new BookingException("Chỗ ngồi " + seat + " đã được đặt, vui lòng chọn chỗ khác.");
             }
-
             Booking booking = Booking.builder()
                     .trip(bookingRequest.getTrip())
                     .bookingDateTime(bookingRequest.getBookingDateTime())
@@ -286,7 +282,6 @@ public class BookingServiceImpl implements BookingService {
                     .pointsUsed(BigDecimal.ZERO)
                     .build();
 
-            // Add BookingCargo only for the first seat
             if (bookingRequest.getCargoRequests() != null && selectSeats[0].equals(seat)) {
                 List<BookingCargo> bookingCargos = new ArrayList<>();
                 for (CargoRequest cargoRequest : bookingRequest.getCargoRequests()) {
@@ -303,14 +298,11 @@ public class BookingServiceImpl implements BookingService {
                 }
                 booking.setBookingCargos(bookingCargos);
             }
-
             orderedBookings.add(booking);
         }
-
         var savedBookings = bookingRepo.saveAll(orderedBookings);
         bookingRepo.flush();
 
-        // Save payment history
         List<PaymentHistory> paymentHistories = new ArrayList<>();
         for (Booking savedBooking : savedBookings) {
             paymentHistories.add(PaymentHistory
@@ -326,7 +318,6 @@ public class BookingServiceImpl implements BookingService {
         return savedBookings;
     }
 
-
     @Override
     @Transactional
     @CacheEvict(cacheNames = {"bookings", "bookings_paging"}, allEntries = true)
@@ -334,6 +325,11 @@ public class BookingServiceImpl implements BookingService {
         Booking foundBooking = findById(booking.getId());
         PaymentStatus oldPaymentStatus = foundBooking.getPaymentStatus();
         PaymentStatus newPaymentStatus = booking.getPaymentStatus();
+
+        // Giữ thông tin `user` nếu chưa có
+        if (foundBooking.getUser() == null && booking.getUser() != null) {
+            foundBooking.setUser(booking.getUser());
+        }
         // unpaid -> unpaid: don't create payment history change
         if (oldPaymentStatus.equals(newPaymentStatus)) {
             return booking;
@@ -343,8 +339,9 @@ public class BookingServiceImpl implements BookingService {
             if (foundBooking.getPaymentMethod() != PaymentMethod.CARD) {
                 throw new BookingException("Only bookings paid by CARD can be refunded.");
             }
+            System.out.println("send notification reffunded");
+            sendRefundConfirmationEmail(foundBooking);
         }
-
         // Chuyển từ UNPAID sang PAID khi thanh toán tại quầy
         if (oldPaymentStatus == PaymentStatus.UNPAID && newPaymentStatus == PaymentStatus.PAID) {
             // Allow update from UNPAID to PAID
@@ -356,8 +353,7 @@ public class BookingServiceImpl implements BookingService {
         } else if (!oldPaymentStatus.equals(newPaymentStatus)) {
             throw new BookingException("Invalid status transition.");
         }
-
-
+        foundBooking.setPaymentStatus(newPaymentStatus);
         paymentHistoryRepo.save(PaymentHistory
                 .builder()
                 .oldStatus(oldPaymentStatus)
@@ -365,29 +361,8 @@ public class BookingServiceImpl implements BookingService {
                 .statusChangeDateTime(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
                 .booking(booking)
                 .build());
-
-        // Cập nhật booking
-        Booking updatedBooking = bookingRepo.save(booking);
-
- /*
-        // Gửi SMS xác nhận vé đặt thành công
-        String source = booking.getTrip().getSource().getName();// Ví dụ thông tin chuyến đi
-        String destination = booking.getTrip().getDestination().getName();
-        String busInfo = booking.getTrip().getCoach().getName(); // Ví dụ thông tin xe
-        String departureTime = booking.getTrip().getDepartureDateTime().toString(); // Ngày giờ đi
-        String seatNumbers = String.join(", ", booking.getSeatNumber());  // Danh sách ghế
-        BigDecimal totalPayment = booking.getTotalPayment();  // Tổng giá vé
-
-        // Gọi service để gửi SMS và email
-        notificationService.sendSmsConfirmation(
-                booking.getPhone(), source, destination, busInfo, departureTime, seatNumbers, totalPayment
-        );
-        notificationService.sendEmailConfirmation(
-                booking.getEmail(), source, destination, busInfo, departureTime, seatNumbers, totalPayment
-        );
-*/
-
-        return updatedBooking;
+        System.out.println("Username after refund: " + foundBooking.getUser().getUsername());
+        return bookingRepo.save(foundBooking);
     }
 
     @Override
@@ -398,26 +373,13 @@ public class BookingServiceImpl implements BookingService {
         PaymentStatus oldPaymentStatus = foundBooking.getPaymentStatus();
         LocalDateTime departureTime = foundBooking.getTrip().getDepartureDateTime();
         LocalDateTime currentTime = LocalDateTime.now();
-
-        // Kiểm tra nếu vé đã bị hủy hoặc hoàn tiền
         if (oldPaymentStatus == PaymentStatus.CANCEL || oldPaymentStatus == PaymentStatus.REFUNDED) {
             throw new BookingException("This Booking has already been CANCELED or REFUNDED");
         }
-
-        // Kiểm tra thời gian hủy
         if (currentTime.isAfter(departureTime.minusHours(24))) {
             throw new BookingException("Booking <%d> cannot be canceled within 24 hours before departure.".formatted(id));
         }
-
-        // Xử lý hủy vé
-        String cancelResult = cancelBooking(foundBooking, oldPaymentStatus, currentTime);
-
-        // Xử lý hoàn tiền nếu cần
-//        if (oldPaymentStatus == PaymentStatus.PAID && foundBooking.getPaymentMethod() == PaymentMethod.CARD) {
-//            return refundBooking(foundBooking, currentTime);
-//        }
-
-        return cancelResult;
+        return cancelBooking(foundBooking, oldPaymentStatus, currentTime);
     }
 
     private String cancelBooking(Booking booking, PaymentStatus oldStatus, LocalDateTime currentTime) {
@@ -432,46 +394,12 @@ public class BookingServiceImpl implements BookingService {
                 .build());
 
         releaseSeat(booking.getSeatNumber());
-
         return "Booking <%d> has been canceled successfully.".formatted(booking.getId());
     }
 
-    private String refundBooking(Booking booking, LocalDateTime currentTime) {
-        boolean refundSuccess = simulateRefund(booking.getTotalPayment());
-        if (!refundSuccess) {
-            throw new RuntimeException("Refund failed.");
-        }
-
-        booking.setPaymentStatus(PaymentStatus.REFUNDED);
-        bookingRepo.save(booking);
-
-        paymentHistoryRepo.save(PaymentHistory.builder()
-                .oldStatus(PaymentStatus.CANCEL)
-                .newStatus(PaymentStatus.REFUNDED)
-                .statusChangeDateTime(currentTime)
-                .booking(booking)
-                .build());
-
-        // Đảm bảo ghế được giải phóng sau khi hoàn tiền
-        releaseSeat(booking.getSeatNumber());
-
-        return "Booking <%d> has been canceled and refunded successfully.".formatted(booking.getId());
-    }
-
     private void releaseSeat(String seatNumber) {
-        // Implement logic to release the seat
-        // This might involve updating a seat status in a separate table
-        // or sending a message to a seat management service
         System.out.println("Seat " + seatNumber + " has been released.");
     }
-
-    private boolean simulateRefund(BigDecimal totalPayment) {
-        // Implement actual refund logic here
-        System.out.println("Refunding amount: " + totalPayment);
-        return true; // Simulate successful refund
-    }
-
-
 
     @Override
     public List<Booking> getAllBookingFromTripAndDate(Long tripId) {
@@ -495,16 +423,18 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> bookings = bookingRepo.findAllByTripId(tripId);
         for (Booking booking : bookings) {
             String seatNumber = booking.getSeatNumber();
+//            if (seatNumber != null && allSeats.contains(seatNumber)
+//                    && booking.getPaymentStatus() != PaymentStatus.REFUNDED) {
+//                allSeats.remove(seatNumber);
+//            }
+            // Chỉ loại bỏ ghế khi trạng thái thanh toán là PAID
             if (seatNumber != null && allSeats.contains(seatNumber)
-                    && booking.getPaymentStatus() != PaymentStatus.REFUNDED) {
+                    && booking.getPaymentStatus() == PaymentStatus.PAID) {
                 allSeats.remove(seatNumber);
             }
         }
-
-        // Trả về danh sách ghế còn trống
         return allSeats;
     }
-
 
     // Hàm tạo danh sách ghế dựa trên sức chứa
     private List<String> generateSeats(int capacity) {
@@ -517,8 +447,29 @@ public class BookingServiceImpl implements BookingService {
         for (int i = 1; i <= (capacity - halfCapacity); i++) {
             seats.add("B" + i);
         }
-
         return seats;
     }
 
+    private void sendRefundConfirmationEmail(Booking booking) {
+        String source = booking.getTrip().getSource().getName();
+        String destination = booking.getTrip().getDestination().getName();
+        String busInfo = booking.getTrip().getCoach().getName();
+        String departureTime = booking.getTrip().getDepartureDateTime().toString();
+        String seatNumbers = booking.getSeatNumber();
+        BigDecimal totalPayment = booking.getTotalPayment();
+        String pickUpLocation = booking.getTrip().getPickUpLocation().getName();
+        String dropOffLocation = booking.getTrip().getDropOffLocation().getName();
+
+        notificationService.sendRefundEmail(
+                booking.getEmail(),
+                source,
+                destination,
+                busInfo,
+                departureTime,
+                seatNumbers,
+                totalPayment,
+                pickUpLocation,
+                dropOffLocation
+        );
+    }
 }
