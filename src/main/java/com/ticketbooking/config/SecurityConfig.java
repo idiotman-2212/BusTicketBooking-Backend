@@ -56,15 +56,15 @@ public class SecurityConfig {
                 registry.addMapping("/api/v1/**")
                         .allowedHeaders("*")
                         .allowedOrigins(
-                                "http://14.225.253.62:3000",
-                                "http://14.225.253.62:3001",
-                                "http://14.225.253.62:8080",
+                                "http://103.77.240.219:3000",
+                                "http://103.77.240.219",
+                                "http://103.77.240.219:3001",
+                                "http://103.77.240.219:8080",
                                 "http://localhost:8080",
                                 "http://localhost:3000",
                                 "http://localhost:3001",
-                                "http://chauhuydien.id.vn/admin",
-                                "http://chauhuydien.id.vn",
-                                "https://bus-ticket-booking-customer-six.vercel.app"
+                                "http://admin.chauhuydien.id.vn",
+                                "http://chauhuydien.id.vn"
                         )
                         .allowedMethods("*");
             }
@@ -85,12 +85,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
+                "http://103.77.240.219:3000",
+                "http://103.77.240.219",
+                "http://103.77.240.219:8080",
+                "http://103.77.240.219:3001",
                 "http://localhost:3000",
                 "http://localhost:8080",
                 "http://localhost:3001",
                 "http://chauhuydien.id.vn",
-                "https://bus-ticket-booking-customer-six.vercel.app",
-                "https://bus-ticket-booking-admin-zx3p.vercel.app"
+                "http://admin.chauhuydien.id.vn"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -115,7 +118,8 @@ public class SecurityConfig {
                                 "/api/v1/bookings/**",
                                 "/api/v1/trips/**",
                                 "/api/v1/language/**",
-                                "/api/v1/vnpay/**"
+                                "/api/v1/vnpay/**",
+                                "/api/v1/locations/**"
                         ).permitAll()
                         .requestMatchers("/api/v1/trips/recommend").permitAll()// Public API endpoints
                         .requestMatchers("/api/v1/notifications/**").authenticated()

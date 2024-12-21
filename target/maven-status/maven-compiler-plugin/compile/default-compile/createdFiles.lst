@@ -57,6 +57,7 @@ com\ticketbooking\exception\ExistingResourceException.class
 com\ticketbooking\exception\InvalidInputException.class
 com\ticketbooking\model\enumType\BookingType.class
 com\ticketbooking\model\enumType\RoleCode.class
+com\ticketbooking\config\AsyncConfig.class
 com\ticketbooking\model\Role$RoleBuilder.class
 com\ticketbooking\repo\ProvinceRepo.class
 com\ticketbooking\dto\ScreenPermissionDto$ScreenPermissionDtoBuilder.class
@@ -73,6 +74,7 @@ com\ticketbooking\dto\EmailMessage$EmailMessageBuilder.class
 com\ticketbooking\repo\BookingCargoRepo.class
 com\ticketbooking\service\LocationService.class
 com\ticketbooking\controller\ProvinceController.class
+com\ticketbooking\service\impl\BookingServiceImpl$1.class
 com\ticketbooking\config\swagger\OpenApiConfig.class
 com\ticketbooking\exception\BookingException.class
 com\ticketbooking\repo\ReportRepo.class
